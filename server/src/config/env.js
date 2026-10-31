@@ -1,5 +1,18 @@
-import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const candidateEnvPaths = [
+  path.resolve(currentDir, '../../.env'), // server/.env
+  path.resolve(currentDir, '../../../.env'), // repository root .env
+  path.resolve(process.cwd(), '.env'), // current working directory .env
+];
+
+for (const envPath of candidateEnvPaths) {
+  dotenv.config({ path: envPath, override: false });
+}
 
 const booleanFromEnvironment = z.enum(['true', 'false']).transform((value) => value === 'true');
 

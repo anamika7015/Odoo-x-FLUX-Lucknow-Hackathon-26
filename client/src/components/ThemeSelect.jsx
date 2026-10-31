@@ -1,4 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { FiMoon, FiSun } from 'react-icons/fi';
 import { applyTheme, getTheme } from '../lib/theme.js';
 export function ThemeSelect() { const [theme, setTheme] = useState(getTheme()); useEffect(() => { const media = window.matchMedia('(prefers-color-scheme: dark)'); const sync = () => { if (getTheme() === 'system') applyTheme('system'); }; media.addEventListener('change', sync); return () => media.removeEventListener('change', sync); }, []); const change = (event) => { setTheme(event.target.value); applyTheme(event.target.value); }; return <label className="theme-select"><span>{theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}</span><select aria-label="Theme" value={theme} onChange={change}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>; }
