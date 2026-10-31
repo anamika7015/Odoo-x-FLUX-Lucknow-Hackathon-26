@@ -22,17 +22,20 @@ async function establishSession(user) {
   return { accessToken, refreshToken, user: publicUser(user) };
 }
 
-export async function registerCustomer({ fullName, email, password }) {
+export async function registerCustomer({ fullName, email, password, role = roles.CUSTOMER }) {
+  const userRole = [roles.ADMIN, roles.STAFF, roles.CUSTOMER].includes(role) ? role : roles.CUSTOMER;
   const passwordHash = await hashPassword(password);
   let user;
   let createdCustomer;
   try {
-    user = await User.create({ fullName, email, passwordHash, role: roles.CUSTOMER });
+    user = await User.create({ fullName, email, passwordHash, role: userRole });
     // Older installations may already have a Customer record for an email
     // before that customer creates a portal login. Keep that record and only
     // create a profile when one does not exist yet.
-    const existingCustomer = await Customer.exists({ email });
-    if (!existingCustomer) createdCustomer = await Customer.create({ fullName, email, createdBy: user._id });
+    if (userRole === roles.CUSTOMER) {
+      const existingCustomer = await Customer.exists({ email });
+      if (!existingCustomer) createdCustomer = await Customer.create({ fullName, email, createdBy: user._id });
+    }
     return await establishSession(user);
   } catch (error) {
     await Promise.allSettled([

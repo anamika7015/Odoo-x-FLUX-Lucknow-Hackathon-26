@@ -4,7 +4,7 @@ import { passwordPattern } from '../utils/password.js';
 const email = z.string().trim().email().max(254).transform((value) => value.toLowerCase());
 const password = z.string().min(8, 'Password must be at least 8 characters.').max(128).regex(passwordPattern, 'Password must contain uppercase, lowercase, and special characters.');
 
-export const registerSchema = z.object({ fullName: z.string().trim().min(2).max(120), email, password, confirmPassword: z.string() }).superRefine(({ password: value, confirmPassword }, context) => {
+export const registerSchema = z.object({ fullName: z.string().trim().min(2).max(120), email, password, confirmPassword: z.string(), role: z.enum(['ADMIN', 'STAFF', 'CUSTOMER']).optional().default('CUSTOMER') }).superRefine(({ password: value, confirmPassword }, context) => {
   if (value !== confirmPassword) context.addIssue({ code: z.ZodIssueCode.custom, path: ['confirmPassword'], message: 'Passwords do not match.' });
 });
 export const loginSchema = z.object({ email, password: z.string().min(1).max(128) });

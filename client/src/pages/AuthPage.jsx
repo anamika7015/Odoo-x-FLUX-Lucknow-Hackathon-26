@@ -19,6 +19,7 @@ const registerSchema = z
   .object({
     fullName: z.string().trim().min(2, 'Enter your full name.'),
     email: z.string().trim().email('Enter a valid email address.'),
+    role: z.enum(['ADMIN', 'STAFF', 'CUSTOMER']).default('ADMIN'),
     password: z.string().regex(passwordRule, 'Use at least 8 characters with uppercase, lowercase, and a special character.'),
     confirmPassword: z.string().min(1, 'Confirm your password.'),
   })
@@ -36,7 +37,14 @@ const resetSchema = z
     path: ['confirmPassword'],
     message: 'Passwords do not match.',
   });
-const emptyForm = { fullName: '', email: '', password: '', confirmPassword: '' };
+
+const DEMO_CREDENTIALS = {
+  ADMIN: { email: 'admin@brightloop.io', password: 'Admin@Brightloop2026!' },
+  STAFF: { email: 'staff@brightloop.io', password: 'Staff@Brightloop2026!' },
+  CUSTOMER: { email: 'customer@brightloop.io', password: 'Customer@Brightloop2026!' },
+};
+
+const emptyForm = { fullName: '', email: '', password: '', confirmPassword: '', role: 'ADMIN' };
 
 export function AuthPage({ mode: initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode);
@@ -46,7 +54,7 @@ export function AuthPage({ mode: initialMode = 'login' }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [demoAvailability, setDemoAvailability] = useState({ ADMIN: false, STAFF: false, CUSTOMER: false, loading: true });
+  const [demoAvailability, setDemoAvailability] = useState({ ADMIN: true, STAFF: true, CUSTOMER: true, loading: false });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,8 +63,21 @@ export function AuthPage({ mode: initialMode = 'login' }) {
   useEffect(() => {
     api
       .get('/auth/demo-config')
-      .then((response) => setDemoAvailability({ ...response.data.data.roles, loading: false }))
-      .catch(() => setDemoAvailability({ ADMIN: false, STAFF: false, CUSTOMER: false, loading: false }));
+      .then((response) => {
+        const roles = response.data?.data?.roles;
+        if (roles) {
+          setDemoAvailability({
+            ADMIN: Boolean(roles.ADMIN ?? true),
+            STAFF: Boolean(roles.STAFF ?? true),
+            CUSTOMER: Boolean(roles.CUSTOMER ?? true),
+            loading: false,
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback: keep demo buttons active
+        setDemoAvailability({ ADMIN: true, STAFF: true, CUSTOMER: true, loading: false });
+      });
   }, []);
 
   const updateField = (event) => {
@@ -101,12 +122,19 @@ export function AuthPage({ mode: initialMode = 'login' }) {
       }
       const { email, password } = result.data;
       const payload = registering
-        ? { fullName: result.data.fullName, email, password, confirmPassword: result.data.confirmPassword }
+        ? {
+            fullName: result.data.fullName,
+            email,
+            password,
+            confirmPassword: result.data.confirmPassword,
+            role: form.role || 'ADMIN',
+          }
         : { email, password };
       const response = await api.post(registering ? '/auth/register' : '/auth/login', payload);
       dispatch(setUser(response.data.data.user));
-      toast.success(registering ? 'Account created.' : 'Welcome back.');
-      navigate(location.state?.from?.pathname || '/', { replace: true });
+      toast.success(registering ? `Account created with ${form.role || 'ADMIN'} role.` : 'Welcome back.');
+      const targetPath = registering && form.role === 'CUSTOMER' ? '/portal' : location.state?.from?.pathname || '/';
+      navigate(targetPath, { replace: true });
     } catch (error) {
       const message = errorMessage(error);
       const details = error.response?.data?.error?.details?.fieldErrors;
@@ -119,13 +147,27 @@ export function AuthPage({ mode: initialMode = 'login' }) {
 
   const signInToDemo = async (role) => {
     setIsSubmitting(true);
+    const creds = DEMO_CREDENTIALS[role];
     try {
       const response = await api.post('/auth/demo-login', { role });
       dispatch(setUser(response.data.data.user));
       toast.success(`${role === 'ADMIN' ? 'Admin' : role === 'STAFF' ? 'Staff' : 'Customer'} demo account ready.`);
       navigate(role === 'CUSTOMER' ? '/portal' : location.state?.from?.pathname || '/', { replace: true });
-    } catch (error) {
-      toast.error(errorMessage(error));
+    } catch {
+      // If server demo-login fails, try direct login with standard demo credentials
+      if (creds) {
+        setForm((prev) => ({ ...prev, email: creds.email, password: creds.password }));
+        try {
+          const loginResp = await api.post('/auth/login', creds);
+          dispatch(setUser(loginResp.data.data.user));
+          toast.success(`${role === 'ADMIN' ? 'Admin' : role === 'STAFF' ? 'Staff' : 'Customer'} demo ready.`);
+          navigate(role === 'CUSTOMER' ? '/portal' : location.state?.from?.pathname || '/', { replace: true });
+          return;
+        } catch {
+          // If login also fails, autofill credentials into form fields for easy viewing / manual submission
+          toast.info(`Filled credentials for ${role}: ${creds.email}`);
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -198,7 +240,7 @@ export function AuthPage({ mode: initialMode = 'login' }) {
                 </h2>
                 <p className="mt-1 text-xs text-app-text-muted leading-relaxed">
                   {registering
-                    ? 'Start managing subscription operations securely.'
+                    ? 'Select your workspace role to begin.'
                     : recovering
                     ? 'We will send a reset link if the account is registered.'
                     : resetting
@@ -210,6 +252,37 @@ export function AuthPage({ mode: initialMode = 'login' }) {
             </div>
 
             <form className="space-y-4" onSubmit={submit} noValidate>
+              {registering && (
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-app-text">Select Account Role</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'ADMIN', label: 'Admin', icon: Shield, desc: 'Full Control' },
+                      { id: 'STAFF', label: 'Staff', icon: Users, desc: 'Billing Ops' },
+                      { id: 'CUSTOMER', label: 'Customer', icon: User, desc: 'Portal Access' },
+                    ].map(({ id, label, icon: Icon, desc }) => {
+                      const isSelected = form.role === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, role: id }))}
+                          className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-brand-indigo dark:border-brand-violet bg-brand-indigo/10 dark:bg-brand-violet/15 text-brand-indigo dark:text-brand-softPurple shadow-subtle ring-1 ring-brand-indigo/40'
+                              : 'border-app-border bg-app-card hover:bg-app-secondary text-app-text-muted hover:text-app-text'
+                          }`}
+                        >
+                          <Icon size={16} className={isSelected ? 'text-brand-indigo dark:text-brand-violet' : 'text-app-muted'} />
+                          <span className="mt-1 text-xs font-bold leading-none">{label}</span>
+                          <span className="mt-0.5 text-[10px] text-app-muted leading-none">{desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {registering && (
                 <Field label="Full name" error={errors.fullName}>
                   <Input name="fullName" value={form.fullName} onChange={updateField} autoComplete="name" required />
@@ -258,7 +331,7 @@ export function AuthPage({ mode: initialMode = 'login' }) {
                 {isSubmitting ? (
                   'Please wait…'
                 ) : registering ? (
-                  'Create Account'
+                  `Create ${form.role || 'Admin'} Account`
                 ) : recovering ? (
                   'Send Reset Link'
                 ) : resetting ? (
@@ -325,23 +398,15 @@ export function AuthPage({ mode: initialMode = 'login' }) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="mt-2 w-full text-[11px] h-7 px-2"
-                        disabled={isSubmitting || demoAvailability.loading || !demoAvailability[role]}
+                        className="mt-2 w-full text-[11px] h-7 px-2 border-brand-indigo/30 hover:border-brand-indigo dark:border-brand-violet/30 dark:hover:border-brand-violet hover:bg-brand-indigo/10 dark:hover:bg-brand-violet/15 font-semibold text-brand-indigo dark:text-brand-softPurple"
+                        disabled={isSubmitting}
                         onClick={() => signInToDemo(role)}
                       >
-                        {demoAvailability.loading ? 'Checking…' : demoAvailability[role] ? 'Launch' : 'Unavailable'}
+                        Launch
                       </Button>
                     </div>
                   ))}
                 </div>
-                {!demoAvailability.loading &&
-                  !demoAvailability.ADMIN &&
-                  !demoAvailability.STAFF &&
-                  !demoAvailability.CUSTOMER && (
-                    <p className="mt-2.5 text-[11px] text-app-text-muted text-center">
-                      Demo accounts available once server database is seeded. Regular sign-in remains active.
-                    </p>
-                  )}
               </div>
             )}
 

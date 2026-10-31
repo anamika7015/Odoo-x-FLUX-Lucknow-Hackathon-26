@@ -2,6 +2,25 @@
 
 Enterprise subscription billing SaaS built with React/Vite, Express, and MongoDB.
 
+## Important Credentials 
+
+
+```
+# Optional demo login accounts. Configure email and password per role, then run `cd server && npm run seed:demo`.
+
+# Use unique, strong values meeting the password policy. Demo login stays unavailable until seeded.
+
+DEMO_ADMIN_EMAIL=admin@brightloop.io
+DEMO_ADMIN_PASSWORD=Admin@Brightloop2026!
+
+DEMO_STAFF_EMAIL=staff@brightloop.io
+DEMO_STAFF_PASSWORD=Staff@Brightloop2026!
+
+DEMO_CUSTOMER_EMAIL=customer@brightloop.io
+DEMO_CUSTOMER_PASSWORD=Customer@Brightloop2026!
+
+```
+
 ## Delivery status
 
 Phase 1 delivered architecture, domain/API design, the delivery roadmap, monorepo workspace scaffold, and no-flash light/dark theme tokens.

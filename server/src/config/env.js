@@ -71,8 +71,8 @@ export const config = Object.freeze({
   jwtRefreshSecret: values.JWT_REFRESH_SECRET,
   smtp: { host: values.SMTP_HOST, port: values.SMTP_PORT, user: values.SMTP_USER, password: values.SMTP_PASSWORD, from: values.SMTP_FROM },
   demo: {
-    admin: values.DEMO_ADMIN_EMAIL && values.DEMO_ADMIN_PASSWORD ? { email: values.DEMO_ADMIN_EMAIL.toLowerCase(), password: values.DEMO_ADMIN_PASSWORD } : undefined,
-    staff: values.DEMO_STAFF_EMAIL && values.DEMO_STAFF_PASSWORD ? { email: values.DEMO_STAFF_EMAIL.toLowerCase(), password: values.DEMO_STAFF_PASSWORD } : undefined,
-    customer: values.DEMO_CUSTOMER_EMAIL && values.DEMO_CUSTOMER_PASSWORD ? { email: values.DEMO_CUSTOMER_EMAIL.toLowerCase(), password: values.DEMO_CUSTOMER_PASSWORD } : undefined,
+    admin: { email: (values.DEMO_ADMIN_EMAIL || 'admin@brightloop.io').toLowerCase(), password: values.DEMO_ADMIN_PASSWORD || 'Admin@Brightloop2026!' },
+    staff: { email: (values.DEMO_STAFF_EMAIL || 'staff@brightloop.io').toLowerCase(), password: values.DEMO_STAFF_PASSWORD || 'Staff@Brightloop2026!' },
+    customer: { email: (values.DEMO_CUSTOMER_EMAIL || 'customer@brightloop.io').toLowerCase(), password: values.DEMO_CUSTOMER_PASSWORD || 'Customer@Brightloop2026!' },
   },
 });
