@@ -55,7 +55,7 @@ export async function login({ email, password }) {
 }
 
 export async function loginDemo(role) {
-  const account = role === roles.ADMIN ? config.demo.admin : role === roles.CUSTOMER ? config.demo.customer : undefined;
+  const account = role === roles.ADMIN ? config.demo.admin : role === roles.STAFF ? config.demo.staff : role === roles.CUSTOMER ? config.demo.customer : undefined;
   if (!account) throw new AppError('Demo login is not configured. Set demo credentials and run the demo seed script.', { statusCode: 503, code: 'DEMO_LOGIN_NOT_CONFIGURED' });
   const user = await User.findOne({ email: account.email, role, status: 'ACTIVE', demoAccount: true }).select('+passwordHash');
   if (!user) throw new AppError('The configured demo account is not seeded. Run the demo seed script for this database.', { statusCode: 503, code: 'DEMO_ACCOUNT_NOT_SEEDED' });

@@ -11,7 +11,7 @@ import { PageTransition } from '../components/PageTransition.jsx';
 import { Modal } from './ProductsPage.jsx';
 import { api, errorMessage, unwrap } from '../services/api.js';
 
-const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$/;
+const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
 
 export function SettingsPage() {
   const [search, setSearch] = useState('');

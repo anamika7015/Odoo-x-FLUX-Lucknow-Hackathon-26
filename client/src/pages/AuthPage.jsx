@@ -11,13 +11,13 @@ import { Spotlight } from '../components/aceternity/Spotlight.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Input } from '../components/ui/Primitives.jsx';
-import { FiShield, FiUser } from 'react-icons/fi';
+import { FiShield, FiUser, FiUsers } from 'react-icons/fi';
 
-const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$/;
+const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
 const loginSchema = z.object({ email: z.string().trim().email(), password: z.string().min(1) });
-const registerSchema = z.object({ fullName: z.string().trim().min(2, 'Enter your full name.'), email: z.string().trim().email('Enter a valid email address.'), password: z.string().regex(passwordRule, 'Use at least 9 characters with uppercase, lowercase, and a special character.'), confirmPassword: z.string().min(1, 'Confirm your password.') }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
+const registerSchema = z.object({ fullName: z.string().trim().min(2, 'Enter your full name.'), email: z.string().trim().email('Enter a valid email address.'), password: z.string().regex(passwordRule, 'Use at least 8 characters with uppercase, lowercase, and a special character.'), confirmPassword: z.string().min(1, 'Confirm your password.') }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
 const emailSchema = z.object({ email: z.string().trim().email('Enter a valid email address.') });
-const resetSchema = z.object({ password: z.string().regex(passwordRule, 'Use at least 9 characters with uppercase, lowercase, and a special character.'), confirmPassword: z.string().min(1, 'Confirm your password.') }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
+const resetSchema = z.object({ password: z.string().regex(passwordRule, 'Use at least 8 characters with uppercase, lowercase, and a special character.'), confirmPassword: z.string().min(1, 'Confirm your password.') }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
 const emptyForm = { fullName: '', email: '', password: '', confirmPassword: '' };
 
 export function AuthPage({ mode: initialMode = 'login' }) {
@@ -28,14 +28,14 @@ export function AuthPage({ mode: initialMode = 'login' }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [demoAvailability, setDemoAvailability] = useState({ ADMIN: false, CUSTOMER: false, loading: true });
+  const [demoAvailability, setDemoAvailability] = useState({ ADMIN: false, STAFF: false, CUSTOMER: false, loading: true });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    api.get('/auth/demo-config').then((response) => setDemoAvailability({ ...response.data.data.roles, loading: false })).catch(() => setDemoAvailability({ ADMIN: false, CUSTOMER: false, loading: false }));
+    api.get('/auth/demo-config').then((response) => setDemoAvailability({ ...response.data.data.roles, loading: false })).catch(() => setDemoAvailability({ ADMIN: false, STAFF: false, CUSTOMER: false, loading: false }));
   }, []);
 
   const updateField = (event) => {
@@ -97,7 +97,7 @@ export function AuthPage({ mode: initialMode = 'login' }) {
     try {
       const response = await api.post('/auth/demo-login', { role });
       dispatch(setUser(response.data.data.user));
-      toast.success(`${role === 'ADMIN' ? 'Admin' : 'Customer'} demo account ready.`);
+      toast.success(`${role === 'ADMIN' ? 'Admin' : role === 'STAFF' ? 'Staff' : 'Customer'} demo account ready.`);
       navigate(role === 'CUSTOMER' ? '/portal' : (location.state?.from?.pathname || '/'), { replace: true });
     } catch (error) {
       toast.error(errorMessage(error));
@@ -140,9 +140,13 @@ export function AuthPage({ mode: initialMode = 'login' }) {
               <Button type="submit" className="w-full" disabled={isSubmitting || (resetting && !searchParams.get('token'))}>{isSubmitting ? 'Please wait…' : registering ? 'Create account' : recovering ? 'Send reset link' : resetting ? 'Update password' : 'Sign in'}</Button>
             </form>
             {mode === 'login' && <div className="mt-4 flex items-center justify-between gap-3"><button type="button" className="text-sm text-app-muted hover:text-app-accent" onClick={() => { setMode('register'); setForm(emptyForm); setErrors({}); }}>Need an account? Create one</button><button type="button" className="text-sm text-app-muted hover:text-app-accent" onClick={() => { setMode('forgot'); setForm(emptyForm); setErrors({}); }}>Forgot password?</button></div>}
-            {mode === 'login' && <div className="mt-6 border-t border-app-border pt-5"><h3 className="text-sm font-semibold text-app-text">Explore Demo Accounts</h3><div className="mt-3 grid grid-cols-2 gap-3">
-              {[['ADMIN', 'Admin demo', FiShield, 'Complete management dashboard'], ['CUSTOMER', 'Customer demo', FiUser, 'Customer self-service portal']].map(([role, label, Icon, description]) => <div key={role} className="rounded-xl border border-app-border bg-app-secondary/40 p-3"><div className="flex items-center gap-2 text-app-text"><Icon size={15} /><span className="text-xs font-semibold">{label}</span></div><p className="mt-1 min-h-8 text-[11px] leading-4 text-app-muted">{description}</p><Button type="button" variant="outline" size="sm" className="mt-2 w-full" disabled={isSubmitting || demoAvailability.loading || !demoAvailability[role]} onClick={() => signInToDemo(role)}>{demoAvailability.loading ? 'Checking…' : demoAvailability[role] ? 'Demo Login' : 'Unavailable'}</Button></div>)}
-            </div>{!demoAvailability.loading && !demoAvailability.ADMIN && !demoAvailability.CUSTOMER && <p className="mt-2 text-xs text-app-muted">Demo access needs server demo credentials and a seeded database. Regular sign-in remains available.</p>}</div>}
+            {mode === 'login' && <div className="mt-6 border-t border-app-border pt-5"><h3 className="text-sm font-semibold text-app-text">Explore Demo Accounts</h3><div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {[
+                ['ADMIN', 'Admin demo', FiShield, 'Complete management dashboard'],
+                ['STAFF', 'Staff demo', FiUsers, 'Daily operations & customer workflows'],
+                ['CUSTOMER', 'Customer demo', FiUser, 'Customer self-service portal'],
+              ].map(([role, label, Icon, description]) => <div key={role} className="rounded-xl border border-app-border bg-app-secondary/40 p-3"><div className="flex items-center gap-2 text-app-text"><Icon size={15} /><span className="text-xs font-semibold">{label}</span></div><p className="mt-1 min-h-8 text-[11px] leading-4 text-app-muted">{description}</p><Button type="button" variant="outline" size="sm" className="mt-2 w-full" disabled={isSubmitting || demoAvailability.loading || !demoAvailability[role]} onClick={() => signInToDemo(role)}>{demoAvailability.loading ? 'Checking…' : demoAvailability[role] ? 'Demo Login' : 'Unavailable'}</Button></div>)}
+            </div>{!demoAvailability.loading && !demoAvailability.ADMIN && !demoAvailability.STAFF && !demoAvailability.CUSTOMER && <p className="mt-2 text-xs text-app-muted">Demo access needs server demo credentials and a seeded database. Regular sign-in remains available.</p>}</div>}
             {mode === 'register' && <button type="button" className="mt-4 text-sm text-app-muted hover:text-app-accent" onClick={toggleMode}>Already have an account? Sign in</button>}
             {(recovering || resetting) && <button type="button" className="mt-4 text-sm text-app-muted hover:text-app-accent" onClick={() => navigate('/login')}>Back to sign in</button>}
           </section>

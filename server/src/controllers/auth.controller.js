@@ -26,7 +26,17 @@ export async function loginUser(request, response) {
   response.status(200).json({ success: true, data: { user: session.user }, requestId: request.id });
 }
 export function demoConfig(request, response) {
-  response.json({ success: true, data: { roles: { ADMIN: Boolean(config.demo.admin), CUSTOMER: Boolean(config.demo.customer) } }, requestId: request.id });
+  response.json({
+    success: true,
+    data: {
+      roles: {
+        ADMIN: Boolean(config.demo.admin),
+        STAFF: Boolean(config.demo.staff),
+        CUSTOMER: Boolean(config.demo.customer),
+      },
+    },
+    requestId: request.id,
+  });
 }
 export async function demoLoginUser(request, response) {
   const session = await loginDemo(request.body.role);

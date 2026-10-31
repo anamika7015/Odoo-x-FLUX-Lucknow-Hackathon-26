@@ -19,8 +19,13 @@ if (!config.demo.admin || !config.demo.customer) {
   throw new Error('Set DEMO_ADMIN_EMAIL/PASSWORD and DEMO_CUSTOMER_EMAIL/PASSWORD before seeding demo data.');
 }
 if (config.isProduction) throw new Error('Demo data seeding is disabled in production.');
-for (const [role, account] of [['admin', config.demo.admin], ['customer', config.demo.customer]]) {
-  if (!passwordPattern.test(account.password)) throw new Error(`Configured ${role} demo password must contain upper/lowercase letters, a number, and a symbol (minimum 9 characters).`);
+const configuredAccounts = [
+  ['admin', config.demo.admin],
+  ...(config.demo.staff ? [['staff', config.demo.staff]] : [['staff', { email: 'staff@brightloop.io', password: 'Staff@Brightloop2026!' }]]),
+  ['customer', config.demo.customer],
+];
+for (const [role, account] of configuredAccounts) {
+  if (!passwordPattern.test(account.password)) throw new Error(`Configured ${role} demo password must contain upper/lowercase letters, a number, and a symbol (minimum 8 characters).`);
 }
 
 const daysAgo = (days) => new Date(Date.now() - days * 86_400_000);
@@ -33,9 +38,10 @@ const snapCustomer = (customer) => ({ fullName: customer.fullName, email: custom
 
 try {
   await connectDatabase();
-  const accountEmails = [config.demo.admin.email, config.demo.customer.email];
-  if (new Set(accountEmails).size !== 2) throw new Error('Admin and customer demo emails must be different.');
-  for (const [email, role] of [[config.demo.admin.email, roles.ADMIN], [config.demo.customer.email, roles.CUSTOMER]]) {
+  const staffAccount = config.demo.staff || { email: 'staff@brightloop.io', password: 'Staff@Brightloop2026!' };
+  const accountEmails = [config.demo.admin.email, staffAccount.email, config.demo.customer.email];
+  if (new Set(accountEmails).size !== 3) throw new Error('Admin, staff, and customer demo emails must be different.');
+  for (const [email, role] of [[config.demo.admin.email, roles.ADMIN], [staffAccount.email, roles.STAFF], [config.demo.customer.email, roles.CUSTOMER]]) {
     const existing = await User.findOne({ email });
     if (existing && (!existing.demoAccount || existing.role !== role)) throw new Error(`Refusing to overwrite non-demo or wrong-role account ${email}.`);
   }
@@ -43,12 +49,17 @@ try {
     fullName: 'Brightloop Demo Admin', email: config.demo.admin.email, role: roles.ADMIN,
     passwordHash: await hashPassword(config.demo.admin.password), demoAccount: true, status: 'ACTIVE',
   });
+  const staff = await getOrCreate(User, { email: staffAccount.email }, {
+    fullName: 'Alex Vance (Demo Staff)', email: staffAccount.email, role: roles.STAFF,
+    passwordHash: await hashPassword(staffAccount.password), demoAccount: true, status: 'ACTIVE',
+  });
   const customerUser = await getOrCreate(User, { email: config.demo.customer.email }, {
     fullName: 'Maya Sharma', email: config.demo.customer.email, role: roles.CUSTOMER,
     passwordHash: await hashPassword(config.demo.customer.password), demoAccount: true, status: 'ACTIVE',
   });
   // Sync the configured demo password on repeat runs while preserving user-managed account status.
   await User.updateOne({ _id: admin._id }, { $set: { passwordHash: await hashPassword(config.demo.admin.password), demoAccount: true, role: roles.ADMIN } });
+  await User.updateOne({ _id: staff._id }, { $set: { passwordHash: await hashPassword(staffAccount.password), demoAccount: true, role: roles.STAFF } });
   await User.updateOne({ _id: customerUser._id }, { $set: { passwordHash: await hashPassword(config.demo.customer.password), demoAccount: true, role: roles.CUSTOMER } });
 
   const customers = [];
@@ -202,10 +213,10 @@ try {
   for (const [action, entityType, entityId, index] of auditSpecs) await getOrCreate(AuditLog,
     { 'details.demoKey': `activity-${String(index + 1).padStart(2, '0')}` },
     { actor: admin._id, action, entityType, entityId, details: { demoKey: `activity-${String(index + 1).padStart(2, '0')}` }, createdAt: daysAgo(20 - index) });
-  const recipients = [admin, customerUser];
+  const recipients = [admin, staff, customerUser];
   for (let index = 0; index < 15; index += 1) {
     const type = ['QUOTATION', 'INVOICE', 'PAYMENT', 'SUBSCRIPTION', 'SYSTEM'][index % 5];
-    const recipient = index % 2 ? customerUser : admin;
+    const recipient = recipients[index % recipients.length];
     const title = `Demo · ${['New quotation', 'Invoice available', 'Payment received', 'Subscription update', 'Account activity'][index % 5]}`;
     await getOrCreate(Notification, { recipient: recipient._id, title, message: `Demo activity ${index + 1}: ${type.toLowerCase()} update for your Brightloop account.` },
       { recipient: recipient._id, type, title, message: `Demo activity ${index + 1}: ${type.toLowerCase()} update for your Brightloop account.`, href: type === 'INVOICE' ? '/invoices' : type === 'QUOTATION' ? '/quotations' : '/subscriptions', createdAt: daysAgo(14 - index), ...(index < 6 ? { readAt: daysAgo(1) } : {}) });

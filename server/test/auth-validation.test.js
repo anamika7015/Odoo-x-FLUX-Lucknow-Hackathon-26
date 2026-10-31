@@ -8,6 +8,11 @@ describe('authentication validation', () => {
     const result = registerSchema.safeParse({ fullName: 'Ada Lovelace', email: 'ADA@EXAMPLE.COM', password: validPassword, confirmPassword: validPassword });
     expect(result.success).toBe(true);
     expect(result.data.email).toBe('ada@example.com');
+
+    // Minimum 8 characters with upper, lower, special, number
+    const eightCharPassword = 'Pass!123';
+    const eightCharResult = registerSchema.safeParse({ fullName: 'Ada Lovelace', email: 'ada8@example.com', password: eightCharPassword, confirmPassword: eightCharPassword });
+    expect(eightCharResult.success).toBe(true);
   });
 
   it('rejects weak or mismatched passwords', () => {

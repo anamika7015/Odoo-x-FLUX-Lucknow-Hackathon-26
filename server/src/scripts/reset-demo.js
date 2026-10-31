@@ -22,7 +22,7 @@ if (process.env.CONFIRM_DEMO_RESET !== 'DELETE_DEMO_DATA') {
 try {
   await connectDatabase();
   const [demoUsers, demoCustomers, products, plans, taxes, discounts, quotations, subscriptions, invoices, payments] = await Promise.all([
-    User.find(trustedFilter({ demoAccount: true, email: { $in: [config.demo.admin?.email, config.demo.customer?.email].filter(Boolean) } })).select('_id'), Customer.find({ demoAccount: true }).select('_id'),
+    User.find(trustedFilter({ demoAccount: true, email: { $in: [config.demo.admin?.email, config.demo.staff?.email, config.demo.customer?.email, 'staff@brightloop.io'].filter(Boolean) } })).select('_id'), Customer.find({ demoAccount: true }).select('_id'),
     Product.find({ normalizedName: /^demo-/ }).select('_id'), Plan.find({ normalizedName: /^demo\s·/i }).select('_id'),
     Tax.find({ normalizedName: /^demo-/ }).select('_id'), Discount.find({ normalizedCode: /^demo-/ }).select('_id'),
     Quotation.find({ quotationNumber: /^DEMO-QT-/ }).select('_id'), Subscription.find({ subscriptionNumber: /^DEMO-SUB-/ }).select('_id'),

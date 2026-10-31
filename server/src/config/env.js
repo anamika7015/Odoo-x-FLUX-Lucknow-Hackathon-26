@@ -35,6 +35,8 @@ const schema = z.object({
   SMTP_FROM: z.string().default('Brightloop Software <no-reply@example.com>'),
   DEMO_ADMIN_EMAIL: optionalEmail,
   DEMO_ADMIN_PASSWORD: optionalSecret,
+  DEMO_STAFF_EMAIL: optionalEmail,
+  DEMO_STAFF_PASSWORD: optionalSecret,
   DEMO_CUSTOMER_EMAIL: optionalEmail,
   DEMO_CUSTOMER_PASSWORD: optionalSecret,
 });
@@ -46,7 +48,7 @@ if (!parsed.success) {
 }
 
 const values = parsed.data;
-for (const [emailKey, passwordKey] of [['DEMO_ADMIN_EMAIL', 'DEMO_ADMIN_PASSWORD'], ['DEMO_CUSTOMER_EMAIL', 'DEMO_CUSTOMER_PASSWORD']]) {
+for (const [emailKey, passwordKey] of [['DEMO_ADMIN_EMAIL', 'DEMO_ADMIN_PASSWORD'], ['DEMO_STAFF_EMAIL', 'DEMO_STAFF_PASSWORD'], ['DEMO_CUSTOMER_EMAIL', 'DEMO_CUSTOMER_PASSWORD']]) {
   if (Boolean(values[emailKey]) !== Boolean(values[passwordKey])) throw new Error(`${emailKey} and ${passwordKey} must be configured together.`);
 }
 const origins = values.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean);
@@ -70,6 +72,7 @@ export const config = Object.freeze({
   smtp: { host: values.SMTP_HOST, port: values.SMTP_PORT, user: values.SMTP_USER, password: values.SMTP_PASSWORD, from: values.SMTP_FROM },
   demo: {
     admin: values.DEMO_ADMIN_EMAIL && values.DEMO_ADMIN_PASSWORD ? { email: values.DEMO_ADMIN_EMAIL.toLowerCase(), password: values.DEMO_ADMIN_PASSWORD } : undefined,
+    staff: values.DEMO_STAFF_EMAIL && values.DEMO_STAFF_PASSWORD ? { email: values.DEMO_STAFF_EMAIL.toLowerCase(), password: values.DEMO_STAFF_PASSWORD } : undefined,
     customer: values.DEMO_CUSTOMER_EMAIL && values.DEMO_CUSTOMER_PASSWORD ? { email: values.DEMO_CUSTOMER_EMAIL.toLowerCase(), password: values.DEMO_CUSTOMER_PASSWORD } : undefined,
   },
 });

@@ -109,6 +109,50 @@ export function OverviewPage() {
         <ChartCard title="Revenue by subscription plan"><ResponsiveContainer width="100%" height="100%"><BarChart data={planRevenue} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" /><XAxis type="number" stroke="var(--color-text-muted)" /><YAxis type="category" dataKey="name" width={125} stroke="var(--color-text-muted)" /><Tooltip formatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`} /><Bar dataKey="value" name="Invoiced (₹)" fill="var(--color-accent)" radius={[0, 5, 5, 0]} /></BarChart></ResponsiveContainer></ChartCard>
       </div>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Recent subscriptions</CardTitle>
+            <Link to="/subscriptions" className="text-xs font-medium text-app-accent hover:underline">View all</Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(report.data?.recentSubscriptions || []).map((subscription) => (
+              <div key={subscription._id} className="flex items-center justify-between gap-3 border-b border-app-border pb-3 text-sm">
+                <div>
+                  <strong className="text-app-text">{subscription.subscriptionNumber}</strong>
+                  <p className="text-xs text-app-muted">{subscription.customer?.companyName || subscription.customer?.fullName || subscription.customer?.email || 'Customer'} · {new Date(subscription.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <span className={`status text-xs ${subscription.status === 'ACTIVE' ? 'active' : 'inactive'}`}>{subscription.status}</span>
+                  <p className="mt-0.5 text-xs text-app-muted">{formatCurrencyBuckets([{ currency: subscription.currency || 'INR', amount: subscription.subtotal }])}</p>
+                </div>
+              </div>
+            ))}
+            {!report.data?.recentSubscriptions?.length && <p className="text-sm text-app-muted">No subscriptions recorded yet.</p>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Recent payments</CardTitle>
+            <Link to="/payments" className="text-xs font-medium text-app-accent hover:underline">View all</Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(report.data?.recentPayments || []).map((payment) => (
+              <div key={payment._id} className="flex items-center justify-between gap-3 border-b border-app-border pb-3 text-sm">
+                <div>
+                  <strong className="text-app-text">{payment.customer?.companyName || payment.customer?.fullName || payment.invoice?.invoiceNumber || 'Payment'}</strong>
+                  <p className="text-xs text-app-muted">{payment.method?.replaceAll('_', ' ')} · {new Date(payment.paymentDate).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <strong className="text-app-text">{formatCurrencyBuckets([{ currency: payment.invoice?.currency || 'INR', amount: payment.amount }])}</strong>
+                  <p className="text-xs text-app-muted">{payment.invoice?.invoiceNumber || '—'}</p>
+                </div>
+              </div>
+            ))}
+            {!report.data?.recentPayments?.length && <p className="text-sm text-app-muted">No payments recorded yet.</p>}
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card><CardHeader><CardTitle>Upcoming renewals</CardTitle></CardHeader><CardContent className="space-y-3">
           {(report.data?.upcomingRenewals || []).map((item) => <div key={item._id} className="flex justify-between gap-3 border-b border-app-border pb-3 text-sm"><span>{item.customer?.companyName || item.customer?.fullName || item.customer?.email} · {item.subscriptionNumber}</span><span className="text-app-muted">{new Date(item.nextBillingDate).toLocaleDateString()} · {formatCurrencyBuckets([{ currency: item.currency, amount: item.subtotal }])}</span></div>)}
           {!report.data?.upcomingRenewals?.length && <p className="text-sm text-app-muted">No renewals due in the next 30 days.</p>}
