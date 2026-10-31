@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FiEdit, FiPlus, FiPackage, FiSearch, FiSliders } from 'react-icons/fi';
+import {
+  Package,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Edit,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { api, errorMessage, unwrap } from '../services/api.js';
@@ -72,7 +80,7 @@ export function ProductsPage() {
 
   if (products.isLoading) {
     return (
-      <section className="page-wrap">
+      <section className="page-wrap space-y-4">
         <div className="skeleton tall animate-pulse rounded-2xl bg-app-secondary/50" />
       </section>
     );
@@ -82,7 +90,7 @@ export function ProductsPage() {
     return (
       <section className="page-wrap">
         <EmptyState
-          icon={FiPackage}
+          icon={Package}
           title="Catalog could not load"
           description={errorMessage(products.error)}
         />
@@ -94,156 +102,172 @@ export function ProductsPage() {
   const meta = products.data?.meta || { total: items.length, totalPages: 1 };
 
   return (
-    <PageTransition>
+    <PageTransition className="page-wrap">
       <PageHeader
         eyebrow="COMMERCIAL CATALOG"
         title="Products & Services"
-        description="Manage subscription products, cost structures, and edition variants."
+        description="Manage subscription products, recurring cost structures, and edition variants."
         actions={
           admin && (
             <Button onClick={() => setProductEditor({})}>
-              <FiPlus size={16} /> New Product
+              <Plus size={16} />
+              <span>New Product</span>
             </Button>
           )
         }
       />
 
       {/* Search & Filters */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-64 flex-1">
-          <FiSearch className="absolute left-3 top-3 text-app-text-muted" size={15} />
-          <input
-            className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-sm text-app-text placeholder:text-app-text-muted/60 transition-all focus:border-app-accent focus:ring-2 focus:ring-app-ring focus:outline-none"
-            aria-label="Search products"
-            placeholder="Search product name or type…"
-            value={search}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-subtle">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-72">
+            <Search className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
+            <input
+              className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
+              aria-label="Search products"
+              placeholder="Search product name or type…"
+              value={search}
+              onChange={(event) => {
+                setPage(1);
+                setSearch(event.target.value);
+              }}
+            />
+          </div>
+          <select
+            className="h-10 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
+            aria-label="Filter products by status"
+            value={status}
             onChange={(event) => {
               setPage(1);
-              setSearch(event.target.value);
+              setStatus(event.target.value);
             }}
-          />
+          >
+            <option value="">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
         </div>
-        <select
-          className="h-10 rounded-xl border border-app-border bg-app-surface px-3 text-sm text-app-text transition-all focus:border-app-accent focus:ring-2 focus:ring-app-ring focus:outline-none"
-          aria-label="Filter products by status"
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-        >
-          <option value="">All statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-        </select>
+
+        <div className="text-xs text-app-text-muted font-semibold">
+          Total: <span className="font-bold text-app-text tabular-nums">{meta.total}</span> products
+        </div>
       </div>
 
       {/* Table */}
       {items.length ? (
-        <div className="data-card">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Type</th>
-                <th>Sales Price</th>
-                <th>Cost Price</th>
-                <th>Status</th>
-                {admin && <th className="text-right">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((product) => (
-                <tr key={product._id}>
-                  <td>
-                    <strong>{product.name}</strong>
-                    <small>{product.description || 'No description provided'}</small>
-                  </td>
-                  <td>
-                    <span className="rounded-md bg-app-secondary px-2 py-0.5 text-xs font-medium text-app-text">
-                      {product.productType}
-                    </span>
-                  </td>
-                  <td className="tabular-nums font-semibold text-app-text">
-                    {rupees(product.salesPrice, product.currency)}
-                  </td>
-                  <td className="tabular-nums text-app-text-muted">
-                    {rupees(product.costPrice, product.currency)}
-                  </td>
-                  <td>
-                    <Status value={product.status} />
-                  </td>
-                  {admin && (
-                    <td>
-                      <div className="row-actions">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setVariantsFor(product)}
-                          title="Manage edition variants"
-                        >
-                          <FiSliders size={14} /> Variants
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setProductEditor(product)}
-                          title="Edit product"
-                        >
-                          <FiEdit size={14} /> Edit
-                        </Button>
-                      </div>
-                    </td>
-                  )}
+        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
+                <tr>
+                  <th className="p-4">Product</th>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Sales Price</th>
+                  <th className="p-4">Cost Price</th>
+                  <th className="p-4 text-center">Status</th>
+                  {admin && <th className="p-4 text-right">Actions</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-app-border">
+                {items.map((product) => (
+                  <tr key={product._id} className="hover:bg-app-secondary/30 transition-colors">
+                    <td className="p-4">
+                      <strong className="text-sm font-bold text-app-text">{product.name}</strong>
+                      <small className="text-app-text-muted">{product.description || 'No description provided'}</small>
+                    </td>
+                    <td className="p-4">
+                      <span className="rounded-lg bg-app-secondary px-2.5 py-1 text-xs font-semibold text-app-text border border-app-border">
+                        {product.productType}
+                      </span>
+                    </td>
+                    <td className="p-4 tabular-nums font-bold text-app-text text-sm">
+                      {rupees(product.salesPrice, product.currency)}
+                    </td>
+                    <td className="p-4 tabular-nums text-app-text-muted font-medium">
+                      {rupees(product.costPrice, product.currency)}
+                    </td>
+                    <td className="p-4 text-center">
+                      <Status value={product.status} />
+                    </td>
+                    {admin && (
+                      <td className="p-4 text-right">
+                        <div className="row-actions">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setVariantsFor(product)}
+                            title="Manage edition variants"
+                          >
+                            <SlidersHorizontal size={13} />
+                            <span>Variants</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setProductEditor(product)}
+                            title="Edit product"
+                          >
+                            <Edit size={13} />
+                            <span>Edit</span>
+                          </Button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between border-t border-app-border px-4 py-3 text-xs text-app-text-muted">
+            <span className="font-medium">
+              Showing {items.length} of {meta.total} products
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1 || products.isFetching}
+                onClick={() => setPage((v) => v - 1)}
+                className="inline-flex items-center gap-1 rounded-xl border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
+              >
+                <ChevronLeft size={13} />
+                <span>Previous</span>
+              </button>
+              <span className="font-bold text-app-text">
+                Page {page} of {Math.max(meta.totalPages, 1)}
+              </span>
+              <button
+                type="button"
+                disabled={page >= meta.totalPages || products.isFetching}
+                onClick={() => setPage((v) => v + 1)}
+                className="inline-flex items-center gap-1 rounded-xl border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
+              >
+                <span>Next</span>
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <EmptyState
-          icon={FiPackage}
+          icon={Package}
           title="No products found"
           description={
             search || status
-              ? 'Try adjusting your search or status filters.'
-              : 'Create your first product to begin building your commercial subscription catalog.'
+              ? 'Try adjusting your search query or status filter.'
+              : 'Create your first product to begin building your commercial catalog.'
           }
           action={
             admin && (
               <Button onClick={() => setProductEditor({})}>
-                <FiPlus size={16} /> New Product
+                <Plus size={16} />
+                <span>New Product</span>
               </Button>
             )
           }
         />
       )}
-
-      {/* Pagination */}
-      <div className="mt-5 flex items-center justify-between text-xs text-app-text-muted">
-        <span>Total: {meta.total} products</span>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page <= 1 || products.isFetching}
-            onClick={() => setPage((v) => v - 1)}
-          >
-            Previous
-          </Button>
-          <span className="px-2 font-medium text-app-text">
-            Page {page} of {Math.max(meta.totalPages, 1)}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page >= meta.totalPages || products.isFetching}
-            onClick={() => setPage((v) => v + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
 
       {/* Global Viewport Centered Modals */}
       {productEditor && (
@@ -306,7 +330,7 @@ function ProductForm({ product, close, submit, busy }) {
           <textarea name="notes" value={form.notes} onChange={update} placeholder="Private notes visible to internal staff only..." />
         </label>
 
-        <div className="full flex justify-end gap-2.5 pt-4 border-t border-app-border mt-2">
+        <div className="full flex justify-end gap-3 pt-5 border-t border-app-border mt-3">
           <Button type="button" variant="outline" onClick={close} disabled={busy}>Cancel</Button>
           <Button type="submit" disabled={busy}>
             {busy ? 'Saving…' : product ? 'Save Changes' : 'Create Product'}
@@ -358,7 +382,7 @@ function VariantManager({ product, close }) {
       close={close}
     >
       {variants.isLoading ? (
-        <div className="skeleton h-32 rounded-xl bg-app-secondary/50 animate-pulse" />
+        <div className="skeleton h-32 rounded-2xl bg-app-secondary/50 animate-pulse" />
       ) : (
         <div className="space-y-4">
           <div className="space-y-2.5">
@@ -366,17 +390,17 @@ function VariantManager({ product, close }) {
               variants.data.variants.map((variant) => (
                 <div
                   key={variant._id}
-                  className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/30 p-3.5 transition-colors"
+                  className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/25 p-3.5 transition-colors"
                 >
                   <div>
-                    <strong className="text-sm font-semibold text-app-text">{variant.name}</strong>
-                    <p className="text-xs text-app-text-muted">
+                    <strong className="text-sm font-bold text-app-text">{variant.name}</strong>
+                    <p className="text-xs text-app-text-muted mt-0.5">
                       {variant.attribute} · +{rupees(variant.additionalPrice, variant.currency)} add-on
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Status value={variant.status} />
-                    <span className="tabular-nums font-bold text-sm text-app-accent">
+                    <span className="tabular-nums font-bold text-sm text-brand-indigo dark:text-brand-violet-light">
                       {rupees(variant.finalPrice, variant.currency)}
                     </span>
                     <Button
@@ -388,19 +412,19 @@ function VariantManager({ product, close }) {
                         setEditing(variant);
                       }}
                     >
-                      <FiEdit size={13} />
+                      <Edit size={13} />
                     </Button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-xs text-app-text-muted py-2">No variants defined yet for this product.</p>
+              <p className="text-xs text-app-text-muted py-2 text-center">No variants defined yet for this product.</p>
             )}
           </div>
 
           {editing ? (
             <div className="border-t border-app-border pt-4">
-              <h4 className="text-xs font-bold uppercase text-app-text-muted mb-3">Edit Variant</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-3">Edit Variant</h4>
               <VariantForm
                 variant={editing}
                 busy={update.isPending}
@@ -410,7 +434,7 @@ function VariantManager({ product, close }) {
             </div>
           ) : adding ? (
             <div className="border-t border-app-border pt-4">
-              <h4 className="text-xs font-bold uppercase text-app-text-muted mb-3">Add New Variant</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-3">Add New Variant</h4>
               <VariantForm
                 busy={create.isPending}
                 onCancel={() => setAdding(false)}
@@ -419,7 +443,8 @@ function VariantManager({ product, close }) {
             </div>
           ) : (
             <Button size="sm" onClick={() => setAdding(true)}>
-              <FiPlus size={15} /> Add Variant
+              <Plus size={15} />
+              <span>Add Variant</span>
             </Button>
           )}
         </div>
@@ -456,7 +481,7 @@ function VariantForm({ variant, submit, onCancel, busy }) {
           <option value="INACTIVE">Inactive</option>
         </select>
       </label>
-      <div className="full flex justify-end gap-2 pt-2">
+      <div className="full flex justify-end gap-2.5 pt-3">
         {onCancel && <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={busy}>Cancel</Button>}
         <Button size="sm" type="submit" disabled={busy}>
           {busy ? 'Saving…' : variant ? 'Save Variant' : 'Add Variant'}
@@ -491,9 +516,9 @@ export function Status({ value }) {
 
 export function Empty({ icon: Icon, title, detail }) {
   return (
-    <div className="empty-state">
+    <div className="flex flex-col items-center justify-center p-8 text-center">
       {Icon && <Icon size={32} className="mx-auto mb-3 text-app-text-muted" />}
-      <h3 className="text-base font-semibold text-app-text">{title}</h3>
+      <h3 className="text-base font-bold text-app-text">{title}</h3>
       <p className="mt-1 text-xs text-app-text-muted">{detail}</p>
     </div>
   );

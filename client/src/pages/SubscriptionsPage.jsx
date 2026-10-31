@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  FiClock,
-  FiEdit,
-  FiLayers,
-  FiSearch,
-  FiPlay,
-  FiPause,
-  FiXCircle,
-  FiRefreshCw,
-  FiCheckCircle,
-} from 'react-icons/fi';
+  Clock,
+  Edit,
+  Layers,
+  Search,
+  Play,
+  Pause,
+  XCircle,
+  RefreshCw,
+  CheckCircle2,
+  ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { api, errorMessage, unwrap } from '../services/api.js';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { Modal, FormField, FormInput, FormSelect, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
 
 const money = (amount, currency = 'INR') =>
@@ -27,11 +32,11 @@ const date = (value) => (value ? new Date(value).toLocaleDateString('en-IN') : '
 const subStatusBadge = (status) => {
   switch (status) {
     case 'ACTIVE':
-      return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
+      return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25';
     case 'CONFIRMED':
-      return 'bg-brand-gold/15 text-brand-gold border-brand-gold/30';
+      return 'bg-brand-indigo/15 text-brand-indigo dark:text-brand-violet-light border-brand-indigo/25';
     case 'PAUSED':
-      return 'bg-amber-500/15 text-amber-500 border-amber-500/30';
+      return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25';
     case 'CLOSED':
     case 'EXPIRED':
       return 'bg-app-secondary text-app-text-muted border-app-border';
@@ -84,7 +89,7 @@ export function SubscriptionsPage() {
 
   if (subscriptions.isLoading) {
     return (
-      <PageTransition className="space-y-4">
+      <PageTransition className="page-wrap space-y-4">
         <div className="h-24 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
         <div className="h-96 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
       </PageTransition>
@@ -104,31 +109,31 @@ export function SubscriptionsPage() {
   });
 
   return (
-    <PageTransition className="relative">
+    <PageTransition className="page-wrap">
       <PageHeader
-        eyebrow="ACTIVE AGREEMENTS"
+        eyebrow="ACTIVE COMMITMENTS"
         title="Subscriptions"
-        description="Monitor active subscription commitments, automated renewal dates, and lifecycle states."
+        description="Monitor active subscription commitments, automated renewal schedules, and contract lifecycle actions."
       />
 
       {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-sm">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-subtle">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-64">
-            <FiSearch className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
+          <div className="relative min-w-72">
+            <Search className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
             <input
               aria-label="Search subscriptions"
               placeholder="Search by sub #, customer, or plan…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 w-full rounded-lg border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+              className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
             />
           </div>
           <select
             aria-label="Filter subscriptions by status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="h-9 rounded-lg border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+            className="h-10 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
           >
             <option value="">All Statuses</option>
             {['CONFIRMED', 'ACTIVE', 'PAUSED', 'CLOSED', 'EXPIRED'].map((s) => (
@@ -139,17 +144,17 @@ export function SubscriptionsPage() {
           </select>
         </div>
 
-        <div className="text-xs text-app-text-muted font-medium">
+        <div className="text-xs text-app-text-muted font-semibold">
           Total: <span className="font-bold text-app-text tabular-nums">{rawRows.length}</span> subscriptions
         </div>
       </div>
 
       {/* Subscriptions Table */}
       {filteredRows.length ? (
-        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+              <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                 <tr>
                   <th className="p-4">Subscription ID</th>
                   <th className="p-4">Customer Account</th>
@@ -176,14 +181,14 @@ export function SubscriptionsPage() {
                   ];
 
                   return (
-                    <tr key={subscription._id} className="hover:bg-app-secondary/20 transition-colors">
+                    <tr key={subscription._id} className="hover:bg-app-secondary/30 transition-colors">
                       <td className="p-4">
                         <button
                           type="button"
                           onClick={() => setSelected(subscription._id)}
                           className="text-left group"
                         >
-                          <strong className="text-sm font-bold text-app-text group-hover:text-brand-teal transition-colors">
+                          <strong className="text-sm font-bold text-app-text group-hover:text-brand-indigo dark:group-hover:text-brand-violet-light transition-colors">
                             {subscription.subscriptionNumber}
                           </strong>
                           <p className="mt-0.5 text-[11px] text-app-text-muted">
@@ -198,7 +203,7 @@ export function SubscriptionsPage() {
                         <p className="text-[11px] text-app-text-muted">{subscription.customerSnapshot?.email}</p>
                       </td>
                       <td className="p-4">
-                        <span className="font-medium text-app-text">
+                        <span className="font-semibold text-app-text">
                           {subscription.lines.map((l) => `${l.planName} × ${l.quantity}`).join(', ')}
                         </span>
                       </td>
@@ -206,7 +211,7 @@ export function SubscriptionsPage() {
                         <span className="text-sm font-bold text-app-text tabular-nums">
                           {money(total, subscription.currency)}
                         </span>
-                        <span className="block text-[10px] text-app-text-muted uppercase">
+                        <span className="block text-[10px] text-app-text-muted uppercase font-medium">
                           / {subscription.lines[0]?.billingFrequency?.toLowerCase()}
                         </span>
                       </td>
@@ -215,7 +220,7 @@ export function SubscriptionsPage() {
                       </td>
                       <td className="p-4 text-center">
                         <span
-                          className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${subStatusBadge(
+                          className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${subStatusBadge(
                             subscription.status
                           )}`}
                         >
@@ -228,10 +233,10 @@ export function SubscriptionsPage() {
                             <button
                               type="button"
                               onClick={() => setEditing(subscription)}
-                              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-teal transition-colors"
+                              className="rounded-xl p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                               title="Edit confirmed subscription"
                             >
-                              <FiEdit size={14} />
+                              <Edit size={14} />
                             </button>
                           )}
                           {allowed.map((actionName) => (
@@ -240,12 +245,12 @@ export function SubscriptionsPage() {
                               type="button"
                               disabled={action.isPending}
                               onClick={() => action.mutate({ id: subscription._id, name: actionName })}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-semibold shadow-sm transition-all ${
+                              className={`rounded-xl px-3 py-1.5 text-xs font-semibold shadow-subtle transition-all ${
                                 actionName === 'activate'
-                                  ? 'bg-brand-teal text-white hover:bg-brand-teal-hover'
+                                  ? 'bg-brand-indigo dark:bg-brand-indigo-bright text-white shadow-btn-primary hover:bg-brand-indigo-deep dark:hover:bg-brand-violet'
                                   : actionName === 'close'
                                   ? 'border border-rose-500/30 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
-                                  : 'border border-app-border bg-app-surface text-app-text hover:bg-app-secondary'
+                                  : 'border border-app-border bg-app-surface text-app-text hover:bg-app-secondary hover:border-brand-indigo/40'
                               }`}
                             >
                               {actionName.charAt(0).toUpperCase() + actionName.slice(1)}
@@ -262,11 +267,11 @@ export function SubscriptionsPage() {
         </div>
       ) : (
         <EmptyState
-          icon={FiLayers}
+          icon={Layers}
           title="No subscriptions found"
           description={
             search || status
-              ? 'No subscriptions match the selected search or status filters.'
+              ? 'No subscriptions match the selected search query or status filter.'
               : 'Subscriptions created from confirmed quotations will appear here.'
           }
         />
@@ -316,9 +321,9 @@ function SubscriptionEditor({ subscription, busy, close, submit }) {
         }}
         className="space-y-4"
       >
-        <div className="rounded-xl border border-app-border bg-app-secondary/20 p-4 space-y-3">
+        <div className="rounded-xl border border-app-border bg-app-secondary/25 p-4 space-y-3">
           <p className="text-xs text-app-text-muted leading-relaxed">
-            Locked price and plan snapshots remain immutable. Only committed line quantities can be tuned before activation.
+            Locked price snapshots remain immutable. Only committed line quantities can be tuned before activation.
           </p>
           {subscription.lines.map((line, index) => (
             <FormField key={`${line.plan}-${index}`} label={`${line.planName} (${line.productName}) Quantity`} required>
@@ -367,36 +372,38 @@ function SubscriptionDetails({ result, loading, close }) {
       close={close}
     >
       {loading ? (
-        <div className="h-64 animate-pulse rounded-xl bg-app-secondary/50" />
+        <div className="h-64 animate-pulse rounded-2xl bg-app-secondary/50" />
       ) : subscription ? (
         <div className="space-y-5 text-xs text-app-text">
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5">
             <div>
-              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Customer</p>
+              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Customer</p>
               <p className="font-bold text-app-text mt-0.5">{subscription.customerSnapshot?.fullName}</p>
               <p className="text-[11px] text-app-text-muted">{subscription.customerSnapshot?.email}</p>
             </div>
             <div>
-              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Status</p>
               <p className="font-bold text-app-text mt-0.5">{subscription.status}</p>
             </div>
             <div>
-              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Start Date</p>
+              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Start Date</p>
               <p className="font-semibold text-app-text mt-0.5">{date(subscription.startDate)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Next Billing</p>
-              <p className="font-semibold text-brand-teal mt-0.5">{date(subscription.nextBillingDate)}</p>
+              <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Next Billing</p>
+              <p className="font-bold text-brand-indigo dark:text-brand-violet-light mt-0.5">
+                {date(subscription.nextBillingDate)}
+              </p>
             </div>
           </div>
 
           {/* Contract Lines */}
           <div>
-            <h4 className="font-bold uppercase tracking-wider text-app-text mb-2">Committed Offerings</h4>
+            <h4 className="font-bold uppercase tracking-wider text-app-text mb-2.5">Committed Offerings</h4>
             <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+                <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                   <tr>
                     <th className="p-3">Product & Plan</th>
                     <th className="p-3 text-center">Quantity</th>
@@ -410,7 +417,7 @@ function SubscriptionDetails({ result, loading, close }) {
                       <td className="p-3">
                         <strong className="text-app-text font-bold">{line.productName}</strong>
                         {line.variantName && <span className="text-app-text-muted"> · {line.variantName}</span>}
-                        <p className="text-[11px] text-app-text-muted">{line.planName}</p>
+                        <p className="text-[11px] text-app-text-muted mt-0.5">{line.planName}</p>
                       </td>
                       <td className="p-3 text-center tabular-nums font-semibold">{line.quantity}</td>
                       <td className="p-3 text-right tabular-nums">
@@ -428,22 +435,22 @@ function SubscriptionDetails({ result, loading, close }) {
 
           {/* Status Lifecycle Audit Log */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <FiClock className="text-brand-teal" size={14} />
-              <h4 className="font-bold uppercase tracking-wider text-app-text">Status Lifecycle Audit Log</h4>
+            <div className="flex items-center gap-2 mb-2.5">
+              <Clock className="text-brand-indigo dark:text-brand-violet-light" size={14} />
+              <h4 className="font-bold uppercase tracking-wider text-app-text">Lifecycle Audit Stream</h4>
             </div>
             {result.history?.length ? (
               <div className="space-y-2">
                 {result.history.map((entry) => (
                   <div
                     key={entry._id}
-                    className="flex items-center justify-between rounded-xl border border-app-border/40 bg-app-secondary/20 p-2.5"
+                    className="flex items-center justify-between rounded-xl border border-app-border/60 bg-app-secondary/25 p-2.5"
                   >
                     <div>
                       <strong className="text-app-text font-semibold">
                         {entry.fromStatus || 'Draft'} → {entry.toStatus}
                       </strong>
-                      <p className="text-[11px] text-app-text-muted mt-0.5">{entry.reason || 'Lifecycle action'}</p>
+                      <p className="text-[11px] text-app-text-muted mt-0.5">{entry.reason || 'Lifecycle event'}</p>
                     </div>
                     <span className="text-[11px] text-app-text-muted whitespace-nowrap">
                       {date(entry.occurredAt)}
@@ -452,12 +459,12 @@ function SubscriptionDetails({ result, loading, close }) {
                 ))}
               </div>
             ) : (
-              <p className="text-app-text-muted italic">No status transition history recorded yet.</p>
+              <p className="text-app-text-muted italic py-2">No status transition history recorded yet.</p>
             )}
           </div>
         </div>
       ) : (
-        <p className="text-xs text-app-text-muted">Subscription data could not be loaded.</p>
+        <p className="text-xs text-app-text-muted">Subscription details could not be loaded.</p>
       )}
     </Modal>
   );

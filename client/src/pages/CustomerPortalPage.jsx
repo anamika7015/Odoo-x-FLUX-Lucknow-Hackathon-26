@@ -1,6 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FiCreditCard, FiDownload, FiEye, FiFileText, FiPackage, FiSearch, FiUser } from 'react-icons/fi';
+import {
+  CreditCard,
+  Download,
+  Eye,
+  FileText,
+  Package,
+  Search,
+  User,
+  CheckCircle2,
+  Calendar,
+  AlertCircle,
+  Clock,
+  Sparkles,
+  Building2,
+  Mail,
+  Phone,
+  FileCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { api, errorMessage, unwrap } from '../services/api.js';
 import { Badge } from '../components/ui/Primitives.jsx';
@@ -11,12 +28,13 @@ import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
 import { Modal, FormField, FormInput, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
 
-const money = (amount, currency = 'INR') => new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format((amount || 0) / 100);
-const date = (value) => value ? new Date(value).toLocaleDateString('en-IN') : '—';
+const money = (amount, currency = 'INR') =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format((amount || 0) / 100);
+const date = (value) => (value ? new Date(value).toLocaleDateString('en-IN') : '—');
 
 export function CustomerPortalPage() {
   const [editing, setEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'subscriptions', 'invoices', 'quotations', 'payments'
+  const [activeTab, setActiveTab] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
@@ -78,7 +96,14 @@ export function CustomerPortalPage() {
   // Filtered lists
   const filteredPlans = useMemo(() => {
     return rawPlans.filter((sub) => {
-      const matchSearch = !subSearch || sub.subscriptionNumber.toLowerCase().includes(subSearch.toLowerCase()) || sub.lines.some((l) => l.planName?.toLowerCase().includes(subSearch.toLowerCase()) || l.productName?.toLowerCase().includes(subSearch.toLowerCase()));
+      const matchSearch =
+        !subSearch ||
+        sub.subscriptionNumber.toLowerCase().includes(subSearch.toLowerCase()) ||
+        sub.lines.some(
+          (l) =>
+            l.planName?.toLowerCase().includes(subSearch.toLowerCase()) ||
+            l.productName?.toLowerCase().includes(subSearch.toLowerCase())
+        );
       const matchStatus = !subStatus || sub.status === subStatus;
       return matchSearch && matchStatus;
     });
@@ -87,7 +112,10 @@ export function CustomerPortalPage() {
   const filteredBills = useMemo(() => {
     return rawBills.filter((inv) => {
       const isOverdue = inv.status === 'CONFIRMED' && inv.outstanding > 0 && new Date(inv.dueDate) < new Date();
-      const matchSearch = !invSearch || inv.invoiceNumber.toLowerCase().includes(invSearch.toLowerCase()) || inv.lines.some((l) => l.productName?.toLowerCase().includes(invSearch.toLowerCase()));
+      const matchSearch =
+        !invSearch ||
+        inv.invoiceNumber.toLowerCase().includes(invSearch.toLowerCase()) ||
+        inv.lines.some((l) => l.productName?.toLowerCase().includes(invSearch.toLowerCase()));
       const matchStatus = !invStatus || (invStatus === 'OVERDUE' ? isOverdue : inv.status === invStatus);
       return matchSearch && matchStatus;
     });
@@ -95,7 +123,10 @@ export function CustomerPortalPage() {
 
   const filteredQuotes = useMemo(() => {
     return rawQuotes.filter((q) => {
-      const matchSearch = !quoteSearch || q.quotationNumber.toLowerCase().includes(quoteSearch.toLowerCase()) || q.lines.some((l) => l.planName?.toLowerCase().includes(quoteSearch.toLowerCase()));
+      const matchSearch =
+        !quoteSearch ||
+        q.quotationNumber.toLowerCase().includes(quoteSearch.toLowerCase()) ||
+        q.lines.some((l) => l.planName?.toLowerCase().includes(quoteSearch.toLowerCase()));
       const matchStatus = !quoteStatus || q.status === quoteStatus;
       return matchSearch && matchStatus;
     });
@@ -103,15 +134,32 @@ export function CustomerPortalPage() {
 
   const filteredPayments = useMemo(() => {
     return rawPayments.filter((p) => {
-      return !paySearch || p.paymentReference?.toLowerCase().includes(paySearch.toLowerCase()) || p.invoice?.invoiceNumber?.toLowerCase().includes(paySearch.toLowerCase()) || p.method?.toLowerCase().includes(paySearch.toLowerCase());
+      return (
+        !paySearch ||
+        p.paymentReference?.toLowerCase().includes(paySearch.toLowerCase()) ||
+        p.invoice?.invoiceNumber?.toLowerCase().includes(paySearch.toLowerCase()) ||
+        p.method?.toLowerCase().includes(paySearch.toLowerCase())
+      );
     });
   }, [rawPayments, paySearch]);
 
   if (profile.isLoading || subscriptions.isLoading || invoices.isLoading || payments.isLoading || quotations.isLoading) {
-    return <section className="page"><div className="skeleton tall" /></section>;
+    return (
+      <section className="page-wrap">
+        <div className="skeleton tall" />
+      </section>
+    );
   }
   if (profile.isError || subscriptions.isError || invoices.isError || payments.isError || quotations.isError) {
-    return <section className="page"><EmptyState icon={FiUser} title="Your account could not load" description={errorMessage(profile.error || subscriptions.error || invoices.error || payments.error || quotations.error)} /></section>;
+    return (
+      <section className="page-wrap">
+        <EmptyState
+          icon={User}
+          title="Your account could not load"
+          description={errorMessage(profile.error || subscriptions.error || invoices.error || payments.error || quotations.error)}
+        />
+      </section>
+    );
   }
 
   const active = rawPlans.filter((sub) => sub.status === 'ACTIVE');
@@ -119,28 +167,34 @@ export function CustomerPortalPage() {
   const nextBilling = active.map(({ nextBillingDate }) => nextBillingDate).filter(Boolean).sort()[0];
 
   return (
-    <PageTransition>
+    <PageTransition className="page-wrap">
       <PageHeader
         eyebrow="CUSTOMER PORTAL"
-        title={`Welcome back, ${customer.fullName.split(' ')[0]}`}
-        description="Monitor subscriptions, review quotations, settle invoices, and manage your billing profile."
+        title={`Welcome back, ${customer?.fullName ? customer.fullName.split(' ')[0] : 'Client'}`}
+        description="Monitor subscriptions, review commercial estimates, settle recurring invoices, and manage your billing profile."
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setEditing(true)}><FiUser size={16} />Edit profile</Button>
-          </div>
+          <Button variant="outline" onClick={() => setEditing(true)}>
+            <User size={15} />
+            <span>Edit Profile</span>
+          </Button>
         }
       />
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={FiPackage} label="Active subscriptions" value={active.length} />
-        <Metric icon={FiCreditCard} label="Outstanding balance" value={money(totalOutstanding)} />
-        <Metric icon={FiFileText} label="Total invoices" value={rawBills.length} />
-        <Metric icon={FiPackage} label="Next billing date" value={date(nextBilling)} />
+        <MetricCard icon={Package} label="Active Subscriptions" value={active.length} variant="indigo" />
+        <MetricCard
+          icon={CreditCard}
+          label="Outstanding Balance"
+          value={money(totalOutstanding)}
+          variant={totalOutstanding > 0 ? 'amber' : 'emerald'}
+        />
+        <MetricCard icon={FileText} label="Total Invoices" value={rawBills.length} variant="violet" />
+        <MetricCard icon={Calendar} label="Next Billing Date" value={date(nextBilling)} variant="neutral" />
       </div>
 
       {/* Navigation Filter Tabs */}
-      <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-app-border pb-3">
+      <div className="mt-7 flex flex-wrap items-center gap-2 border-b border-app-border pb-3.5">
         {[
           ['all', 'All Overview'],
           ['subscriptions', `Subscriptions (${filteredPlans.length})`],
@@ -151,7 +205,11 @@ export function CustomerPortalPage() {
           <button
             key={key}
             type="button"
-            className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${activeTab === key ? 'bg-app-accent text-white' : 'bg-app-secondary/60 text-app-muted hover:text-app-text'}`}
+            className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all shadow-subtle ${
+              activeTab === key
+                ? 'bg-brand-indigo dark:bg-brand-indigo-bright text-white shadow-btn-primary dark:shadow-btn-primary-dark'
+                : 'bg-app-surface text-app-text-muted hover:bg-app-secondary hover:text-app-text border border-app-border'
+            }`}
             onClick={() => setActiveTab(key)}
           >
             {label}
@@ -159,17 +217,17 @@ export function CustomerPortalPage() {
         ))}
       </div>
 
-      {/* Tab: Subscriptions (or shown in All) */}
+      {/* Tab: Subscriptions */}
       {(activeTab === 'all' || activeTab === 'subscriptions') && (
-        <Card className="mt-6">
-          <CardHeader className="flex-row items-center justify-between">
+        <Card className="mt-6 shadow-subtle">
+          <CardHeader className="flex-row items-center justify-between border-b border-app-border/60 pb-3">
             <CardTitle>Subscriptions</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <div className="relative min-w-40">
-                <FiSearch className="absolute left-2.5 top-2.5 text-app-muted" size={14} />
+              <div className="relative min-w-44">
+                <Search className="absolute left-3 top-2.5 text-app-text-muted" size={14} />
                 <input
                   aria-label="Search subscriptions"
-                  className="h-8 w-full rounded-md border border-app-border bg-app-surface pl-8 pr-2 text-xs text-app-text"
+                  className="h-9 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                   placeholder="Search plan or ID…"
                   value={subSearch}
                   onChange={(e) => setSubSearch(e.target.value)}
@@ -177,7 +235,7 @@ export function CustomerPortalPage() {
               </div>
               <select
                 aria-label="Filter subscriptions"
-                className="h-8 rounded-md border border-app-border bg-app-surface px-2 text-xs text-app-text"
+                className="h-9 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                 value={subStatus}
                 onChange={(e) => setSubStatus(e.target.value)}
               >
@@ -190,7 +248,7 @@ export function CustomerPortalPage() {
               </select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {filteredPlans.length ? (
               <div className="data-card">
                 <table>
@@ -201,7 +259,7 @@ export function CustomerPortalPage() {
                       <th>Recurring Total</th>
                       <th>Next Billing</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -212,7 +270,7 @@ export function CustomerPortalPage() {
                           <td>
                             <button
                               type="button"
-                              className="font-semibold text-app-accent hover:underline text-left"
+                              className="font-bold text-brand-indigo dark:text-brand-violet-light hover:underline text-left"
                               onClick={() => setSelectedSubscription(subscription)}
                             >
                               {subscription.subscriptionNumber}
@@ -223,26 +281,67 @@ export function CustomerPortalPage() {
                             <strong>{subscription.lines.map((l) => l.planName).join(', ')}</strong>
                             <small>{subscription.lines.map((l) => `${l.quantity} × ${l.productName}`).join(' | ')}</small>
                           </td>
-                          <td>{money(total, subscription.currency)} <small>/ {subscription.lines[0]?.billingFrequency?.toLowerCase()}</small></td>
-                          <td>{date(subscription.nextBillingDate)}</td>
-                          <td><Badge variant={subscription.status === 'ACTIVE' ? 'success' : 'muted'}>{subscription.status}</Badge></td>
+                          <td className="tabular-nums font-semibold">
+                            {money(total, subscription.currency)}{' '}
+                            <small className="inline text-app-text-muted font-normal">
+                              / {subscription.lines[0]?.billingFrequency?.toLowerCase()}
+                            </small>
+                          </td>
+                          <td className="tabular-nums">{date(subscription.nextBillingDate)}</td>
                           <td>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <Button size="sm" variant="outline" title="View details" onClick={() => setSelectedSubscription(subscription)}>
-                                <FiEye size={14} />
+                            <span
+                              className={`status ${
+                                subscription.status === 'ACTIVE'
+                                  ? 'active'
+                                  : subscription.status === 'PAUSED'
+                                  ? 'warning'
+                                  : 'inactive'
+                              }`}
+                            >
+                              {subscription.status}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="flex flex-wrap items-center justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                title="View details"
+                                onClick={() => setSelectedSubscription(subscription)}
+                              >
+                                <Eye size={14} />
                               </Button>
                               {subscription.status === 'ACTIVE' && subscription.allowPause && (
-                                <Button size="sm" variant="outline" disabled={changeSubscription.isPending} onClick={() => changeSubscription.mutate({ id: subscription._id, action: 'pause' })}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={changeSubscription.isPending}
+                                  onClick={() => changeSubscription.mutate({ id: subscription._id, action: 'pause' })}
+                                >
                                   Pause
                                 </Button>
                               )}
                               {subscription.status === 'PAUSED' && (
-                                <Button size="sm" variant="outline" disabled={changeSubscription.isPending} onClick={() => changeSubscription.mutate({ id: subscription._id, action: 'resume' })}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={changeSubscription.isPending}
+                                  onClick={() => changeSubscription.mutate({ id: subscription._id, action: 'resume' })}
+                                >
                                   Resume
                                 </Button>
                               )}
                               {['ACTIVE', 'PAUSED'].includes(subscription.status) && subscription.allowEarlyClosure && (
-                                <Button size="sm" variant="destructive" disabled={changeSubscription.isPending} onClick={() => { if (window.confirm('Close this subscription? This cannot be undone.')) changeSubscription.mutate({ id: subscription._id, action: 'close' }); }}>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={changeSubscription.isPending}
+                                  onClick={() => {
+                                    if (window.confirm('Close this subscription? This cannot be undone.')) {
+                                      changeSubscription.mutate({ id: subscription._id, action: 'close' });
+                                    }
+                                  }}
+                                >
                                   Close
                                 </Button>
                               )}
@@ -255,23 +354,31 @@ export function CustomerPortalPage() {
                 </table>
               </div>
             ) : (
-              <EmptyState icon={FiPackage} title="No subscriptions match" description={subSearch || subStatus ? 'Try adjusting your search or status filter.' : 'Your subscriptions will appear here.'} />
+              <EmptyState
+                icon={Package}
+                title="No subscriptions match"
+                description={
+                  subSearch || subStatus
+                    ? 'Try adjusting your search query or status filter.'
+                    : 'Active subscriptions will appear here.'
+                }
+              />
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Tab: Invoices (or shown in All) */}
+      {/* Tab: Invoices */}
       {(activeTab === 'all' || activeTab === 'invoices') && (
-        <Card className="mt-6">
-          <CardHeader className="flex-row items-center justify-between">
+        <Card className="mt-6 shadow-subtle">
+          <CardHeader className="flex-row items-center justify-between border-b border-app-border/60 pb-3">
             <CardTitle>Invoices</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <div className="relative min-w-40">
-                <FiSearch className="absolute left-2.5 top-2.5 text-app-muted" size={14} />
+              <div className="relative min-w-44">
+                <Search className="absolute left-3 top-2.5 text-app-text-muted" size={14} />
                 <input
                   aria-label="Search invoices"
-                  className="h-8 w-full rounded-md border border-app-border bg-app-surface pl-8 pr-2 text-xs text-app-text"
+                  className="h-9 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                   placeholder="Search invoice number…"
                   value={invSearch}
                   onChange={(e) => setInvSearch(e.target.value)}
@@ -279,7 +386,7 @@ export function CustomerPortalPage() {
               </div>
               <select
                 aria-label="Filter invoices"
-                className="h-8 rounded-md border border-app-border bg-app-surface px-2 text-xs text-app-text"
+                className="h-9 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                 value={invStatus}
                 onChange={(e) => setInvStatus(e.target.value)}
               >
@@ -292,7 +399,7 @@ export function CustomerPortalPage() {
               </select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {filteredBills.length ? (
               <div className="data-card">
                 <table>
@@ -305,19 +412,20 @@ export function CustomerPortalPage() {
                       <th>Outstanding</th>
                       <th>Due Date</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredBills.map((invoice) => {
-                      const isOverdue = invoice.status === 'CONFIRMED' && invoice.outstanding > 0 && new Date(invoice.dueDate) < new Date();
+                      const isOverdue =
+                        invoice.status === 'CONFIRMED' && invoice.outstanding > 0 && new Date(invoice.dueDate) < new Date();
                       const displayStatus = isOverdue ? 'OVERDUE' : invoice.status;
                       return (
                         <tr key={invoice._id}>
                           <td>
                             <button
                               type="button"
-                              className="font-semibold text-app-accent hover:underline text-left"
+                              className="font-bold text-brand-indigo dark:text-brand-violet-light hover:underline text-left"
                               onClick={() => setSelectedInvoice(invoice)}
                             >
                               {invoice.invoiceNumber}
@@ -325,28 +433,46 @@ export function CustomerPortalPage() {
                             <small>{invoice.lines.map((line) => line.productName).join(', ')}</small>
                           </td>
                           <td>{date(invoice.createdAt)}</td>
-                          <td>{date(invoice.periodStart)} – {date(invoice.periodEnd)}</td>
-                          <td><strong>{money(invoice.total, invoice.currency)}</strong></td>
                           <td>
+                            {date(invoice.periodStart)} – {date(invoice.periodEnd)}
+                          </td>
+                          <td className="tabular-nums font-bold">{money(invoice.total, invoice.currency)}</td>
+                          <td className="tabular-nums font-bold">
                             {invoice.outstanding > 0 ? (
-                              <span className="font-semibold text-amber-600">{money(invoice.outstanding, invoice.currency)}</span>
+                              <span className="text-amber-600 dark:text-amber-400">
+                                {money(invoice.outstanding, invoice.currency)}
+                              </span>
                             ) : (
-                              <span className="text-emerald-600">Settled</span>
+                              <span className="text-emerald-600 dark:text-emerald-400">Settled</span>
                             )}
                           </td>
-                          <td>{date(invoice.dueDate)}</td>
+                          <td className="tabular-nums">{date(invoice.dueDate)}</td>
                           <td>
-                            <span className={`status ${displayStatus === 'PAID' ? 'active' : isOverdue ? 'warning' : 'inactive'}`}>
+                            <span
+                              className={`status ${
+                                displayStatus === 'PAID' ? 'active' : isOverdue ? 'danger' : 'inactive'
+                              }`}
+                            >
                               {displayStatus}
                             </span>
                           </td>
                           <td>
-                            <div className="flex items-center gap-1.5">
-                              <Button size="sm" variant="outline" title="View invoice breakdown" onClick={() => setSelectedInvoice(invoice)}>
-                                <FiEye size={14} />
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                title="View invoice breakdown"
+                                onClick={() => setSelectedInvoice(invoice)}
+                              >
+                                <Eye size={14} />
                               </Button>
-                              <Button size="sm" variant="outline" title="Download invoice PDF" onClick={() => downloadPdf(invoice.invoiceNumber, invoice._id)}>
-                                <FiDownload size={14} />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                title="Download invoice PDF"
+                                onClick={() => downloadPdf(invoice.invoiceNumber, invoice._id)}
+                              >
+                                <Download size={14} />
                               </Button>
                             </div>
                           </td>
@@ -357,23 +483,31 @@ export function CustomerPortalPage() {
                 </table>
               </div>
             ) : (
-              <EmptyState icon={FiFileText} title="No invoices match" description={invSearch || invStatus ? 'Try adjusting your search or status filter.' : 'Invoices generated for your subscriptions will appear here.'} />
+              <EmptyState
+                icon={FileText}
+                title="No invoices match"
+                description={
+                  invSearch || invStatus
+                    ? 'Try adjusting your search query or status filter.'
+                    : 'Invoices generated for your subscriptions will appear here.'
+                }
+              />
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Tab: Quotations (or shown in All) */}
+      {/* Tab: Quotations */}
       {(activeTab === 'all' || activeTab === 'quotations') && (
-        <Card className="mt-6">
-          <CardHeader className="flex-row items-center justify-between">
+        <Card className="mt-6 shadow-subtle">
+          <CardHeader className="flex-row items-center justify-between border-b border-app-border/60 pb-3">
             <CardTitle>Quotations</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <div className="relative min-w-40">
-                <FiSearch className="absolute left-2.5 top-2.5 text-app-muted" size={14} />
+              <div className="relative min-w-44">
+                <Search className="absolute left-3 top-2.5 text-app-text-muted" size={14} />
                 <input
                   aria-label="Search quotations"
-                  className="h-8 w-full rounded-md border border-app-border bg-app-surface pl-8 pr-2 text-xs text-app-text"
+                  className="h-9 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                   placeholder="Search quote number…"
                   value={quoteSearch}
                   onChange={(e) => setQuoteSearch(e.target.value)}
@@ -381,7 +515,7 @@ export function CustomerPortalPage() {
               </div>
               <select
                 aria-label="Filter quotations"
-                className="h-8 rounded-md border border-app-border bg-app-surface px-2 text-xs text-app-text"
+                className="h-9 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
                 value={quoteStatus}
                 onChange={(e) => setQuoteStatus(e.target.value)}
               >
@@ -394,7 +528,7 @@ export function CustomerPortalPage() {
               </select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {filteredQuotes.length ? (
               <div className="data-card">
                 <table>
@@ -406,7 +540,7 @@ export function CustomerPortalPage() {
                       <th>Total</th>
                       <th>Valid Until</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -415,7 +549,7 @@ export function CustomerPortalPage() {
                         <td>
                           <button
                             type="button"
-                            className="font-semibold text-app-accent hover:underline text-left"
+                            className="font-bold text-brand-indigo dark:text-brand-violet-light hover:underline text-left"
                             onClick={() => setSelectedQuotation(quote)}
                           >
                             {quote.quotationNumber}
@@ -426,25 +560,50 @@ export function CustomerPortalPage() {
                           <strong>{quote.lines.map((line) => line.planName).join(', ')}</strong>
                           <small>{quote.lines.map((line) => `${line.quantity} × ${line.productName}`).join(' | ')}</small>
                         </td>
-                        <td>{money(quote.total, quote.currency)}</td>
-                        <td>{date(quote.validUntil)}</td>
+                        <td className="tabular-nums font-bold">{money(quote.total, quote.currency)}</td>
+                        <td className="tabular-nums">{date(quote.validUntil)}</td>
                         <td>
-                          <Badge variant={quote.status === 'QUOTATION' ? 'success' : 'muted'}>{quote.status}</Badge>
+                          <Badge variant={quote.status === 'QUOTATION' ? 'violet' : 'muted'}>
+                            {quote.status}
+                          </Badge>
                         </td>
                         <td>
-                          <div className="flex items-center gap-1.5">
-                            <Button size="sm" variant="outline" title="View details" onClick={() => setSelectedQuotation(quote)}>
-                              <FiEye size={14} />
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              title="View details"
+                              onClick={() => setSelectedQuotation(quote)}
+                            >
+                              <Eye size={14} />
                             </Button>
-                            <Button size="sm" variant="outline" title="Download quotation PDF" onClick={() => downloadQuotationPdf(quote.quotationNumber, quote._id)}>
-                              <FiDownload size={14} />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              title="Download quotation PDF"
+                              onClick={() => downloadQuotationPdf(quote.quotationNumber, quote._id)}
+                            >
+                              <Download size={14} />
                             </Button>
                             {quote.status === 'QUOTATION' && new Date(quote.validUntil) >= new Date() && (
                               <>
-                                <Button size="sm" disabled={decideQuotation.isPending} onClick={() => decideQuotation.mutate({ id: quote._id, action: 'accept' })}>
+                                <Button
+                                  size="sm"
+                                  disabled={decideQuotation.isPending}
+                                  onClick={() => decideQuotation.mutate({ id: quote._id, action: 'accept' })}
+                                >
                                   Accept
                                 </Button>
-                                <Button size="sm" variant="outline" disabled={decideQuotation.isPending} onClick={() => { if (window.confirm('Reject this quotation?')) decideQuotation.mutate({ id: quote._id, action: 'reject' }); }}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={decideQuotation.isPending}
+                                  onClick={() => {
+                                    if (window.confirm('Reject this quotation?')) {
+                                      decideQuotation.mutate({ id: quote._id, action: 'reject' });
+                                    }
+                                  }}
+                                >
                                   Reject
                                 </Button>
                               </>
@@ -457,29 +616,37 @@ export function CustomerPortalPage() {
                 </table>
               </div>
             ) : (
-              <EmptyState icon={FiFileText} title="No quotations match" description={quoteSearch || quoteStatus ? 'Try adjusting your search or status filter.' : 'Quotations prepared for your account will appear here.'} />
+              <EmptyState
+                icon={FileText}
+                title="No quotations match"
+                description={
+                  quoteSearch || quoteStatus
+                    ? 'Try adjusting your search query or status filter.'
+                    : 'Quotations prepared for your account will appear here.'
+                }
+              />
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Tab: Payments (or shown in All) */}
+      {/* Tab: Payments */}
       {(activeTab === 'all' || activeTab === 'payments') && (
-        <Card className="mt-6">
-          <CardHeader className="flex-row items-center justify-between">
+        <Card className="mt-6 shadow-subtle">
+          <CardHeader className="flex-row items-center justify-between border-b border-app-border/60 pb-3">
             <CardTitle>Payment History</CardTitle>
-            <div className="relative min-w-40">
-              <FiSearch className="absolute left-2.5 top-2.5 text-app-muted" size={14} />
+            <div className="relative min-w-44">
+              <Search className="absolute left-3 top-2.5 text-app-text-muted" size={14} />
               <input
                 aria-label="Search payments"
-                className="h-8 w-full rounded-md border border-app-border bg-app-surface pl-8 pr-2 text-xs text-app-text"
-                placeholder="Search payment reference or invoice…"
+                className="h-9 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
+                placeholder="Search reference or invoice…"
                 value={paySearch}
                 onChange={(e) => setPaySearch(e.target.value)}
               />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {filteredPayments.length ? (
               <div className="data-card">
                 <table>
@@ -496,40 +663,60 @@ export function CustomerPortalPage() {
                   <tbody>
                     {filteredPayments.map((payment) => (
                       <tr key={payment._id}>
-                        <td><strong>{payment.paymentReference || payment._id.slice(-8).toUpperCase()}</strong></td>
+                        <td>
+                          <strong>{payment.paymentReference || payment._id.slice(-8).toUpperCase()}</strong>
+                        </td>
                         <td>{payment.invoice?.invoiceNumber || '—'}</td>
-                        <td>{payment.method?.replaceAll('_', ' ')}</td>
+                        <td className="capitalize">{payment.method?.replaceAll('_', ' ')}</td>
                         <td>{date(payment.paymentDate)}</td>
-                        <td><strong className="text-emerald-600">{money(payment.amount, payment.invoice?.currency)}</strong></td>
-                        <td><small className="text-app-muted">{payment.note || '—'}</small></td>
+                        <td className="tabular-nums">
+                          <strong className="text-emerald-600 dark:text-emerald-400">
+                            {money(payment.amount, payment.invoice?.currency)}
+                          </strong>
+                        </td>
+                        <td>
+                          <small className="text-app-text-muted">{payment.note || '—'}</small>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <EmptyState icon={FiCreditCard} title="No payments recorded" description={paySearch ? 'No matching payment records found.' : 'Payments made toward your invoices will appear here.'} />
+              <EmptyState
+                icon={CreditCard}
+                title="No payments recorded"
+                description={
+                  paySearch ? 'No matching payment records found.' : 'Payments made toward your invoices will appear here.'
+                }
+              />
             )}
           </CardContent>
         </Card>
       )}
 
       {/* Account / Billing Profile Card */}
-      <Card className="mt-6">
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Billing Profile</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}><FiUser size={14} />Update Profile</Button>
+      <Card className="mt-6 shadow-subtle">
+        <CardHeader className="flex-row items-center justify-between border-b border-app-border/60 pb-3">
+          <div className="flex items-center gap-2">
+            <Building2 className="text-brand-indigo dark:text-brand-violet-light" size={17} />
+            <CardTitle>Billing Profile</CardTitle>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <User size={14} />
+            <span>Update Profile</span>
+          </Button>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <ProfileField label="Full Name" value={customer.fullName} />
-            <ProfileField label="Email Address" value={customer.email} />
-            <ProfileField label="Company Name" value={customer.companyName || 'Not provided'} />
-            <ProfileField label="Phone" value={customer.phone || 'Not provided'} />
-            <ProfileField label="Billing Address" value={customer.billingAddress || 'Not provided'} />
-            <ProfileField label="Tax Identification (GST/VAT)" value={customer.taxId || 'Not provided'} />
-            <ProfileField label="Account Status" value={customer.status || 'ACTIVE'} />
-            <ProfileField label="Member Since" value={date(customer.createdAt)} />
+        <CardContent className="pt-5">
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            <ProfileField label="Full Name" value={customer?.fullName} />
+            <ProfileField label="Email Address" value={customer?.email} />
+            <ProfileField label="Company Name" value={customer?.companyName || 'Not specified'} />
+            <ProfileField label="Phone" value={customer?.phone || 'Not specified'} />
+            <ProfileField label="Billing Address" value={customer?.billingAddress || 'Not specified'} />
+            <ProfileField label="Tax Identification (GST/VAT)" value={customer?.taxId || 'Not specified'} />
+            <ProfileField label="Account Status" value={customer?.status || 'ACTIVE'} />
+            <ProfileField label="Member Since" value={date(customer?.createdAt)} />
           </div>
         </CardContent>
       </Card>
@@ -573,34 +760,46 @@ export function CustomerPortalPage() {
   );
 }
 
-function Metric({ icon: Icon, label, value }) {
+function MetricCard({ icon: Icon, label, value, variant = 'indigo' }) {
+  const variantStyles = {
+    indigo: 'border-brand-indigo/30 bg-app-surface text-brand-indigo dark:text-brand-violet-light',
+    violet: 'border-brand-violet/30 bg-app-surface text-brand-violet dark:text-brand-violet-light',
+    amber: 'border-amber-500/30 bg-app-surface text-amber-600 dark:text-amber-400',
+    emerald: 'border-emerald-500/30 bg-app-surface text-emerald-600 dark:text-emerald-400',
+    neutral: 'border-app-border bg-app-surface text-app-text-muted',
+  };
+
   return (
-    <div className="rounded-2xl border border-app-border bg-app-surface p-5 shadow-sm transition-all hover:border-brand-teal/40">
+    <div
+      className={`rounded-2xl border p-5 shadow-card transition-all hover:shadow-elevated ${
+        variantStyles[variant] || variantStyles.neutral
+      }`}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-app-text-muted">{label}</span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-teal/10 text-brand-teal">
-          <Icon size={16} />
+        <span className="text-xs font-bold uppercase tracking-wider text-app-text-muted">{label}</span>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-app-secondary border border-app-border">
+          <Icon size={17} strokeWidth={2} />
         </div>
       </div>
-      <p className="mt-3 text-2xl font-bold tracking-tight text-app-text tabular-nums">{value}</p>
+      <p className="mt-3.5 text-2xl font-extrabold tracking-tight text-app-text tabular-nums">{value}</p>
     </div>
   );
 }
 
 function ProfileField({ label, value }) {
   return (
-    <div className="rounded-xl border border-app-border/40 bg-app-secondary/20 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-app-text-muted">{label}</p>
-      <p className="mt-1 text-sm font-medium text-app-text">{value}</p>
+    <div className="rounded-xl border border-app-border/60 bg-app-secondary/30 p-3.5">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-app-text-muted">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-app-text">{value}</p>
     </div>
   );
 }
 
 function ProfileForm({ customer, busy, close, submit }) {
   const [form, setForm] = useState({
-    phone: customer.phone || '',
-    companyName: customer.companyName || '',
-    billingAddress: customer.billingAddress || '',
+    phone: customer?.phone || '',
+    companyName: customer?.companyName || '',
+    billingAddress: customer?.billingAddress || '',
   });
   const update = (e) => setForm((curr) => ({ ...curr, [e.target.name]: e.target.value }));
   return (
@@ -652,7 +851,7 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
   return (
     <Modal
       title={`Invoice · ${invoice.invoiceNumber}`}
-      description="Commercial tax invoice breakdown and payment details."
+      description="Commercial tax invoice breakdown and payment settlement details."
       badge={statusBadge}
       size="lg"
       close={close}
@@ -660,28 +859,32 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
       <div className="space-y-5 text-sm text-app-text">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Status</p>
             <p className="font-bold text-app-text mt-0.5">{statusBadge}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Issued Date</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Issued Date</p>
             <p className="font-semibold text-app-text mt-0.5">{date(invoice.createdAt)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Due Date</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Due Date</p>
             <p className="font-semibold text-app-text mt-0.5">{date(invoice.dueDate)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Period</p>
-            <p className="font-semibold text-app-text mt-0.5">{date(invoice.periodStart)} – {date(invoice.periodEnd)}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Billing Cycle</p>
+            <p className="font-semibold text-app-text mt-0.5">
+              {date(invoice.periodStart)} – {date(invoice.periodEnd)}
+            </p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Itemized Products & Subscriptions</h4>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2.5">
+            Itemized Products & Subscriptions
+          </h4>
           <div className="overflow-x-auto rounded-xl border border-app-border">
             <table className="w-full text-left text-xs">
-              <thead className="bg-app-secondary/60 text-app-text-muted font-semibold uppercase border-b border-app-border">
+              <thead className="bg-app-secondary/60 text-app-text-muted font-bold uppercase border-b border-app-border">
                 <tr>
                   <th className="p-3">Item / Plan</th>
                   <th className="p-3 text-center">Qty</th>
@@ -694,12 +897,12 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
               <tbody className="divide-y divide-app-border">
                 {invoice.lines.map((line, idx) => (
                   <tr key={idx} className="hover:bg-app-secondary/20 transition-colors">
-                    <td className="p-3 font-medium text-app-text">
+                    <td className="p-3 font-semibold text-app-text">
                       {line.productName} <span className="text-app-text-muted font-normal">({line.planName})</span>
                     </td>
                     <td className="p-3 text-center tabular-nums">{line.quantity}</td>
                     <td className="p-3 text-right tabular-nums">{money(line.unitPrice, invoice.currency)}</td>
-                    <td className="p-3 text-right tabular-nums text-emerald-500">
+                    <td className="p-3 text-right tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
                       {line.discountTotal ? `−${money(line.discountTotal, invoice.currency)}` : '—'}
                     </td>
                     <td className="p-3 text-right tabular-nums text-app-text-muted">
@@ -722,7 +925,7 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
               <span className="font-semibold text-app-text tabular-nums">{money(invoice.subtotal, invoice.currency)}</span>
             </div>
             {Boolean(invoice.discountTotal) && (
-              <div className="flex justify-between text-emerald-500 font-medium">
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
                 <span>Discounts:</span>
                 <span className="tabular-nums">−{money(invoice.discountTotal, invoice.currency)}</span>
               </div>
@@ -739,9 +942,11 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
             </div>
             <div className="flex justify-between text-app-text-muted">
               <span>Amount Paid:</span>
-              <span className="font-semibold text-emerald-500 tabular-nums">{money(invoice.amountPaid, invoice.currency)}</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {money(invoice.amountPaid, invoice.currency)}
+              </span>
             </div>
-            <div className="flex justify-between border-t border-app-border pt-2 font-bold text-sm text-brand-gold">
+            <div className="flex justify-between border-t border-app-border pt-2 font-extrabold text-sm text-brand-indigo dark:text-brand-violet-light">
               <span>Outstanding Due:</span>
               <span className="tabular-nums">{money(invoice.outstanding, invoice.currency)}</span>
             </div>
@@ -752,14 +957,14 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
           <button
             type="button"
             onClick={onDownloadPdf}
-            className="inline-flex items-center gap-2 rounded-lg border border-app-border bg-app-surface px-4 py-2 text-xs font-semibold text-app-text shadow-sm hover:border-brand-teal hover:text-brand-teal transition-all"
+            className="inline-flex items-center gap-2 rounded-xl border border-app-border bg-app-surface px-4 py-2 text-xs font-semibold text-app-text shadow-subtle hover:border-brand-indigo dark:hover:border-brand-violet hover:text-brand-indigo dark:hover:text-brand-violet-light transition-all"
           >
-            <FiDownload size={14} /> Download Official PDF
+            <Download size={14} /> Download Official PDF
           </button>
           <button
             type="button"
             onClick={close}
-            className="rounded-lg border border-app-border bg-transparent px-4 py-2 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+            className="rounded-xl border border-app-border bg-app-surface px-4 py-2 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
           >
             Close
           </button>
@@ -774,67 +979,78 @@ function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
   return (
     <Modal
       title={`Subscription · ${subscription.subscriptionNumber}`}
-      description="Recurring billing agreement parameters and subscription lifecycle."
+      description="Recurring billing agreement parameters and subscription lifecycle status."
       badge={subscription.status}
       size="lg"
       close={close}
     >
       <div className="space-y-5 text-sm text-app-text">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Status</p>
             <p className="font-bold text-app-text mt-0.5">{subscription.status}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Billing Frequency</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Billing Frequency</p>
             <p className="font-semibold text-app-text mt-0.5">{subscription.lines[0]?.billingFrequency || 'Monthly'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Start Date</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Start Date</p>
             <p className="font-semibold text-app-text mt-0.5">{date(subscription.startDate)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Next Billing</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Next Billing</p>
             <p className="font-semibold text-app-text mt-0.5">{date(subscription.nextBillingDate)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Payment Terms</p>
-            <p className="font-semibold text-app-text mt-0.5">{subscription.paymentTerms || 'Standard'}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Recurring Rate</p>
-            <p className="font-bold text-brand-teal mt-0.5 tabular-nums">{money(total, subscription.currency)}</p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Committed Plans & Products</h4>
-          <div className="space-y-2">
-            {subscription.lines.map((line, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 text-xs"
-              >
-                <div>
-                  <strong className="text-app-text font-bold">{line.planName}</strong>
-                  <p className="text-app-text-muted text-[11px]">{line.productName} · Qty: {line.quantity}</p>
-                </div>
-                <strong className="font-bold text-app-text tabular-nums">{money(line.lineTotal, subscription.currency)}</strong>
-              </div>
-            ))}
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2.5">Committed Plans</h4>
+          <div className="overflow-x-auto rounded-xl border border-app-border">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-app-secondary/60 text-app-text-muted font-bold uppercase border-b border-app-border">
+                <tr>
+                  <th className="p-3">Plan / Tier</th>
+                  <th className="p-3">Product</th>
+                  <th className="p-3 text-center">Quantity</th>
+                  <th className="p-3 text-right">Cycle Cost</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-app-border">
+                {subscription.lines.map((l, idx) => (
+                  <tr key={idx} className="hover:bg-app-secondary/20 transition-colors">
+                    <td className="p-3 font-semibold text-app-text">{l.planName}</td>
+                    <td className="p-3 text-app-text-muted">{l.productName}</td>
+                    <td className="p-3 text-center tabular-nums">{l.quantity}</td>
+                    <td className="p-3 text-right font-bold text-app-text tabular-nums">
+                      {money(l.lineTotal, subscription.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
+        <div className="flex justify-between items-center rounded-xl border border-app-border bg-app-secondary/20 p-4">
+          <span className="text-xs font-semibold text-app-text-muted uppercase tracking-wider">
+            Recurring Commitment Total:
+          </span>
+          <span className="text-base font-extrabold text-app-text tabular-nums">
+            {money(total, subscription.currency)} / cycle
+          </span>
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-app-border pt-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             {subscription.status === 'ACTIVE' && subscription.allowPause && (
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => onAction('pause')}
-                className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-medium text-app-text hover:border-amber-500 hover:text-amber-500 transition-colors disabled:opacity-50"
+                className="rounded-xl border border-app-border bg-app-surface px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors disabled:opacity-50"
               >
-                Request Pause
+                Pause Subscription
               </button>
             )}
             {subscription.status === 'PAUSED' && (
@@ -842,7 +1058,7 @@ function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
                 type="button"
                 disabled={busy}
                 onClick={() => onAction('resume')}
-                className="rounded-lg border border-brand-teal bg-brand-teal/10 px-3 py-1.5 text-xs font-semibold text-brand-teal hover:bg-brand-teal/20 transition-colors disabled:opacity-50"
+                className="rounded-xl bg-brand-indigo dark:bg-brand-indigo-bright px-3 py-1.5 text-xs font-semibold text-white shadow-btn-primary transition-colors disabled:opacity-50"
               >
                 Resume Subscription
               </button>
@@ -854,7 +1070,7 @@ function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
                 onClick={() => {
                   if (window.confirm('Close this subscription early?')) onAction('close');
                 }}
-                className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
               >
                 Close Early
               </button>
@@ -863,7 +1079,7 @@ function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
           <button
             type="button"
             onClick={close}
-            className="rounded-lg border border-app-border bg-transparent px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+            className="rounded-xl border border-app-border bg-app-surface px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
           >
             Close
           </button>
@@ -886,42 +1102,52 @@ function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloa
       <div className="space-y-5 text-sm text-app-text">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Status</p>
             <p className="font-bold text-app-text mt-0.5">{quotation.status}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Validity</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Validity</p>
             <p className="font-semibold text-app-text mt-0.5">Valid until {date(quotation.validUntil)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Payment Terms</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Payment Terms</p>
             <p className="font-semibold text-app-text mt-0.5">{quotation.paymentTerms || 'Standard terms'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Total Estimate</p>
-            <p className="font-bold text-brand-teal mt-0.5 tabular-nums">{money(quotation.total, quotation.currency)}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-bold">Total Estimate</p>
+            <p className="font-bold text-brand-indigo dark:text-brand-violet-light mt-0.5 tabular-nums">
+              {money(quotation.total, quotation.currency)}
+            </p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Quoted Offerings</h4>
-          <div className="space-y-2">
-            {quotation.lines.map((line, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 text-xs"
-              >
-                <div>
-                  <strong className="text-app-text font-bold">{line.planName}</strong>
-                  <p className="text-app-text-muted text-[11px]">
-                    {line.productName} · {line.quantity} unit(s) @ {money(line.unitPrice, quotation.currency)}
-                  </p>
-                </div>
-                <strong className="font-bold text-app-text tabular-nums">
-                  {money(line.total || line.lineTotal, quotation.currency)}
-                </strong>
-              </div>
-            ))}
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2.5">Quoted Line Items</h4>
+          <div className="overflow-x-auto rounded-xl border border-app-border">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-app-secondary/60 text-app-text-muted font-bold uppercase border-b border-app-border">
+                <tr>
+                  <th className="p-3">Plan / Tier</th>
+                  <th className="p-3">Product</th>
+                  <th className="p-3 text-center">Quantity</th>
+                  <th className="p-3 text-right">Price</th>
+                  <th className="p-3 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-app-border">
+                {quotation.lines.map((l, idx) => (
+                  <tr key={idx} className="hover:bg-app-secondary/20 transition-colors">
+                    <td className="p-3 font-semibold text-app-text">{l.planName}</td>
+                    <td className="p-3 text-app-text-muted">{l.productName}</td>
+                    <td className="p-3 text-center tabular-nums">{l.quantity}</td>
+                    <td className="p-3 text-right tabular-nums">{money(l.unitPrice, quotation.currency)}</td>
+                    <td className="p-3 text-right font-bold text-app-text tabular-nums">
+                      {money(l.lineTotal, quotation.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -929,9 +1155,9 @@ function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloa
           <button
             type="button"
             onClick={onDownloadPdf}
-            className="inline-flex items-center gap-2 rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-semibold text-app-text hover:border-brand-teal hover:text-brand-teal transition-all"
+            className="inline-flex items-center gap-2 rounded-xl border border-app-border bg-app-surface px-3 py-1.5 text-xs font-semibold text-app-text hover:border-brand-indigo dark:hover:border-brand-violet hover:text-brand-indigo dark:hover:text-brand-violet-light transition-all shadow-subtle"
           >
-            <FiDownload size={14} /> Download PDF
+            <Download size={14} /> Download PDF
           </button>
           <div className="flex items-center gap-2">
             {isPending && (
@@ -940,15 +1166,15 @@ function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloa
                   type="button"
                   disabled={busy}
                   onClick={onAccept}
-                  className="rounded-lg bg-brand-teal px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors disabled:opacity-50"
+                  className="rounded-xl bg-brand-indigo dark:bg-brand-indigo-bright px-4 py-1.5 text-xs font-semibold text-white shadow-btn-primary hover:bg-brand-indigo-deep dark:hover:bg-brand-violet transition-colors disabled:opacity-50"
                 >
-                  Accept Offer
+                  Accept & Activate
                 </button>
                 <button
                   type="button"
                   disabled={busy}
                   onClick={onReject}
-                  className="rounded-lg border border-app-border bg-transparent px-3 py-1.5 text-xs font-medium text-app-text hover:border-rose-500 hover:text-rose-500 transition-colors disabled:opacity-50"
+                  className="rounded-xl border border-app-border bg-app-surface px-3 py-1.5 text-xs font-semibold text-app-text hover:border-rose-500 hover:text-rose-500 transition-colors disabled:opacity-50"
                 >
                   Reject
                 </button>
@@ -957,7 +1183,7 @@ function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloa
             <button
               type="button"
               onClick={close}
-              className="rounded-lg border border-app-border bg-transparent px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+              className="rounded-xl border border-app-border bg-app-surface px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
             >
               Close
             </button>
@@ -965,8 +1191,6 @@ function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloa
         </div>
       </div>
     </Modal>
-  );
-}
   );
 }
 

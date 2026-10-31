@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FiCalendar, FiEdit, FiPlus, FiSearch, FiCheck, FiX, FiLayers } from 'react-icons/fi';
+import {
+  Layers,
+  Plus,
+  Search,
+  Edit,
+  Calendar,
+  Check,
+  X,
+  Package,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { api, errorMessage, unwrap } from '../services/api.js';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { Modal, FormField, FormInput, FormSelect, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
 
 const rupees = (value, currency = 'INR') =>
@@ -15,10 +25,10 @@ const rupees = (value, currency = 'INR') =>
 const dateInput = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
 
 const freqColorMap = {
-  DAILY: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  WEEKLY: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-  MONTHLY: 'bg-brand-teal/15 text-brand-teal border-brand-teal/30',
-  YEARLY: 'bg-brand-gold/15 text-brand-gold border-brand-gold/30',
+  DAILY: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  WEEKLY: 'bg-brand-violet/15 text-brand-violet dark:text-brand-violet-light border-brand-violet/25',
+  MONTHLY: 'bg-brand-indigo/10 text-brand-indigo dark:text-brand-violet-light border-brand-indigo/25',
+  YEARLY: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
 };
 
 export function PlansPage() {
@@ -56,7 +66,7 @@ export function PlansPage() {
 
   if (plans.isLoading) {
     return (
-      <PageTransition className="space-y-4">
+      <PageTransition className="page-wrap space-y-4">
         <div className="h-24 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
         <div className="h-96 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
       </PageTransition>
@@ -64,41 +74,39 @@ export function PlansPage() {
   }
 
   return (
-    <PageTransition className="relative">
+    <PageTransition className="page-wrap">
       <PageHeader
         eyebrow="COMMERCIAL CONFIGURATION"
         title="Subscription Plans"
-        description="Establish billing intervals, price schedules, and subscriber lifecycle policies."
+        description="Establish recurring billing intervals, price schedules, and subscriber lifecycle policies."
         actions={
           user.role === 'ADMIN' && (
-            <button
-              onClick={() => setEditor({})}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-teal px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors"
-            >
-              <FiPlus size={16} /> New Plan
-            </button>
+            <Button onClick={() => setEditor({})}>
+              <Plus size={16} />
+              <span>Create Plan</span>
+            </Button>
           )
         }
       />
 
       {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-sm">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-subtle">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-64">
-            <FiSearch className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
+          <div className="relative min-w-72">
+            <Search className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
             <input
               aria-label="Search plans"
               placeholder="Search by plan name or description…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 w-full rounded-lg border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+              className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
             />
           </div>
           <select
             aria-label="Filter plans by status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="h-9 rounded-lg border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+            className="h-10 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -106,17 +114,17 @@ export function PlansPage() {
           </select>
         </div>
 
-        <div className="text-xs text-app-text-muted font-medium">
+        <div className="text-xs text-app-text-muted font-semibold">
           Total: <span className="font-bold text-app-text tabular-nums">{plans.data?.plans?.length ?? 0}</span> plans
         </div>
       </div>
 
       {/* Plans Table / Directory */}
       {plans.data?.plans?.length ? (
-        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+              <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                 <tr>
                   <th className="p-4">Plan Name & Details</th>
                   <th className="p-4">Product Association</th>
@@ -129,7 +137,7 @@ export function PlansPage() {
               </thead>
               <tbody className="divide-y divide-app-border">
                 {plans.data.plans.map((plan) => (
-                  <tr key={plan._id} className="hover:bg-app-secondary/20 transition-colors">
+                  <tr key={plan._id} className="hover:bg-app-secondary/30 transition-colors">
                     <td className="p-4">
                       <strong className="text-sm font-bold text-app-text">{plan.name}</strong>
                       <p className="mt-0.5 text-app-text-muted text-[11px] line-clamp-1">
@@ -137,11 +145,11 @@ export function PlansPage() {
                       </p>
                     </td>
                     <td className="p-4">
-                      <span className="font-medium text-app-text">{plan.product?.name || '—'}</span>
+                      <span className="font-semibold text-app-text">{plan.product?.name || '—'}</span>
                     </td>
                     <td className="p-4 text-center">
                       <span
-                        className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           freqColorMap[plan.billingFrequency] || 'bg-app-secondary text-app-text'
                         }`}
                       >
@@ -152,32 +160,30 @@ export function PlansPage() {
                       <span className="text-sm font-bold text-app-text tabular-nums">
                         {rupees(plan.billingPrice, plan.currency)}
                       </span>
-                      <span className="block text-[10px] text-app-text-muted uppercase">
+                      <span className="block text-[10px] text-app-text-muted uppercase font-medium">
                         per {plan.billingFrequency.toLowerCase().replace('ly', '')}
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1 text-[10px]">
                         {plan.allowPause && (
-                          <span className="rounded bg-app-secondary px-1.5 py-0.5 text-app-text-muted">Pause</span>
+                          <span className="rounded-md bg-app-secondary px-2 py-0.5 text-app-text-muted border border-app-border font-medium">Pause</span>
                         )}
                         {plan.allowRenewal && (
-                          <span className="rounded bg-app-secondary px-1.5 py-0.5 text-app-text-muted">Renew</span>
+                          <span className="rounded-md bg-app-secondary px-2 py-0.5 text-app-text-muted border border-app-border font-medium">Renew</span>
                         )}
                         {plan.allowEarlyClosure && (
-                          <span className="rounded bg-app-secondary px-1.5 py-0.5 text-app-text-muted">Early Close</span>
+                          <span className="rounded-md bg-app-secondary px-2 py-0.5 text-app-text-muted border border-app-border font-medium">Early Close</span>
                         )}
                         {plan.autoClose && (
-                          <span className="rounded bg-app-secondary px-1.5 py-0.5 text-amber-500 font-semibold">Auto-Close</span>
+                          <span className="rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-bold border border-amber-500/20">Auto-Close</span>
                         )}
                       </div>
                     </td>
                     <td className="p-4 text-center">
                       <span
-                        className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                          plan.status === 'ACTIVE'
-                            ? 'bg-emerald-500/15 text-emerald-500'
-                            : 'bg-app-secondary text-app-text-muted'
+                        className={`status ${
+                          plan.status === 'ACTIVE' ? 'active' : 'inactive'
                         }`}
                       >
                         {plan.status}
@@ -188,9 +194,9 @@ export function PlansPage() {
                         <button
                           onClick={() => setEditor(plan)}
                           aria-label={`Edit ${plan.name}`}
-                          className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-teal transition-colors"
+                          className="rounded-xl p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                         >
-                          <FiEdit size={15} />
+                          <Edit size={15} />
                         </button>
                       </td>
                     )}
@@ -202,12 +208,20 @@ export function PlansPage() {
         </div>
       ) : (
         <EmptyState
-          icon={FiLayers}
+          icon={Layers}
           title="No subscription plans found"
           description={
             search || status
-              ? 'No plans match the selected search or status filters.'
+              ? 'No plans match the selected search query or status filter.'
               : 'Create recurring billing plans to start selling subscriptions.'
+          }
+          action={
+            user.role === 'ADMIN' && (
+              <Button onClick={() => setEditor({})}>
+                <Plus size={16} />
+                <span>Create Plan</span>
+              </Button>
+            )
           }
         />
       )}
@@ -284,7 +298,7 @@ function PlanForm({ plan, products, close, submit, busy }) {
               <option value="">Choose a product</option>
               {products.map((product) => (
                 <option key={product._id} value={product._id}>
-                  {product.name} ({product.type})
+                  {product.name} ({product.type || product.productType})
                 </option>
               ))}
             </FormSelect>
@@ -373,7 +387,7 @@ function PlanForm({ plan, products, close, submit, busy }) {
         </FormField>
 
         {/* Lifecycle Permissions */}
-        <div className="rounded-xl border border-app-border bg-app-secondary/20 p-4">
+        <div className="rounded-xl border border-app-border bg-app-secondary/25 p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-3">
             Lifecycle & Self-Service Policies
           </p>
@@ -384,13 +398,13 @@ function PlanForm({ plan, products, close, submit, busy }) {
               ['allowEarlyClosure', 'Allow early cancellation by customer'],
               ['autoClose', 'Auto-close upon expiry (non-renewing)'],
             ].map(([name, label]) => (
-              <label key={name} className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-app-text">
+              <label key={name} className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-app-text">
                 <input
                   type="checkbox"
                   name={name}
                   checked={form[name]}
                   onChange={update}
-                  className="h-4 w-4 rounded border-app-border text-brand-teal focus:ring-brand-teal"
+                  className="h-4 w-4 rounded border-app-border text-brand-indigo focus:ring-brand-indigo"
                 />
                 <span>{label}</span>
               </label>

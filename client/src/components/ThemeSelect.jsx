@@ -1,5 +1,49 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-import { FiMoon, FiSun } from 'react-icons/fi';
+import React, { useEffect, useState } from 'react';
+import { Moon, Sun, Monitor } from 'lucide-react';
 import { applyTheme, getTheme } from '../lib/theme.js';
-export function ThemeSelect() { const [theme, setTheme] = useState(getTheme()); useEffect(() => { const media = window.matchMedia('(prefers-color-scheme: dark)'); const sync = () => { if (getTheme() === 'system') applyTheme('system'); }; media.addEventListener('change', sync); return () => media.removeEventListener('change', sync); }, []); const change = (event) => { setTheme(event.target.value); applyTheme(event.target.value); }; return <label className="theme-select"><span>{theme === 'dark' ? <FiMoon size={16} /> : <FiSun size={16} />}</span><select aria-label="Theme" value={theme} onChange={change}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>; }
+import { cn } from '../lib/utils.js';
+
+export function ThemeSelect({ className = '' }) {
+  const [theme, setTheme] = useState(getTheme());
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const sync = () => {
+      if (getTheme() === 'system') applyTheme('system');
+    };
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
+  const change = (event) => {
+    const val = event.target.value;
+    setTheme(val);
+    applyTheme(val);
+  };
+
+  return (
+    <div className={cn('relative inline-flex items-center', className)}>
+      <div className="flex items-center gap-1.5 rounded-xl border border-app-border bg-app-surface/90 px-2.5 py-1.5 shadow-subtle hover:border-brand-violet/40 transition-colors">
+        <span className="text-brand-indigo dark:text-brand-violet-light shrink-0">
+          {theme === 'dark' ? (
+            <Moon size={15} strokeWidth={2} />
+          ) : theme === 'light' ? (
+            <Sun size={15} strokeWidth={2} />
+          ) : (
+            <Monitor size={15} strokeWidth={2} />
+          )}
+        </span>
+        <select
+          aria-label="Theme preference"
+          value={theme}
+          onChange={change}
+          className="bg-transparent text-xs font-semibold text-app-text outline-none cursor-pointer pr-1"
+        >
+          <option value="light" className="bg-app-surface text-app-text">Light</option>
+          <option value="dark" className="bg-app-surface text-app-text">Dark</option>
+          <option value="system" className="bg-app-surface text-app-text">System</option>
+        </select>
+      </div>
+    </div>
+  );
+}

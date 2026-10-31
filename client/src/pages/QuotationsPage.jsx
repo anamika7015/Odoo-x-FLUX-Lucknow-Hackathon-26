@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  FiEdit,
-  FiFileText,
-  FiMail,
-  FiPlus,
-  FiTrash2,
-  FiCheck,
-  FiX,
-  FiArrowRight,
-  FiSend,
-  FiLayers,
-  FiSearch,
-} from 'react-icons/fi';
+  Edit,
+  FileText,
+  Mail,
+  Plus,
+  Trash2,
+  Check,
+  X,
+  ArrowRight,
+  Send,
+  Layers,
+  Search,
+  Building2,
+  Clock,
+  Sparkles,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { api, errorMessage, unwrap } from '../services/api.js';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
+import { Button } from '../components/ui/Button.jsx';
 import { Modal, FormField, FormInput, FormSelect, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
 
 const money = (amount, currency = 'INR') =>
@@ -31,10 +35,13 @@ const quoteStatusBadge = (status) => {
     case 'DRAFT':
       return 'bg-app-secondary text-app-text-muted border-app-border';
     case 'QUOTATION':
-      return 'bg-brand-teal/15 text-brand-teal border-brand-teal/30';
+      return 'bg-brand-violet/15 text-brand-indigo dark:text-brand-violet-light border-brand-violet/30';
     case 'CONFIRMED':
-      return 'bg-brand-gold/15 text-brand-gold border-brand-gold/30';
+      return 'bg-brand-indigo/15 text-brand-indigo dark:text-brand-violet-light border-brand-indigo/30';
+    case 'CONVERTED':
+      return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25';
     case 'EXPIRED':
+    case 'REJECTED':
     case 'CANCELLED':
       return 'bg-rose-500/15 text-rose-500 border-rose-500/30';
     default:
@@ -44,7 +51,7 @@ const quoteStatusBadge = (status) => {
 
 export function QuotationsPage() {
   const [dialog, setDialog] = useState(null);
-  const [activeTab, setActiveTab] = useState('quotations'); // 'quotations' | 'templates'
+  const [activeTab, setActiveTab] = useState('quotations');
   const [search, setSearch] = useState('');
   const { user } = useSelector((state) => state.auth);
   const queryClient = useQueryClient();
@@ -149,7 +156,7 @@ export function QuotationsPage() {
 
   if (quotations.isLoading) {
     return (
-      <PageTransition className="space-y-4">
+      <PageTransition className="page-wrap space-y-4">
         <div className="h-24 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
         <div className="h-96 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
       </PageTransition>
@@ -171,43 +178,42 @@ export function QuotationsPage() {
   });
 
   return (
-    <PageTransition className="relative">
+    <PageTransition className="page-wrap">
       <PageHeader
         eyebrow="COMMERCIAL NEGOTIATIONS"
         title="Sales Quotations"
-        description="Author subscription proposals, monitor acceptance windows, and convert accepted terms."
+        description="Author subscription proposals, monitor acceptance windows, and convert accepted terms into active contracts."
         actions={
           canManage && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
                 onClick={() => setDialog({ type: 'template' })}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-3 py-2 text-xs font-semibold text-app-text shadow-sm hover:border-brand-teal hover:text-brand-teal transition-all"
               >
-                <FiPlus size={14} /> New Template
-              </button>
-              <button
-                type="button"
+                <Plus size={15} />
+                <span>New Template</span>
+              </Button>
+              <Button
                 onClick={() => setDialog({ type: 'quotation' })}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-teal px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors"
               >
-                <FiPlus size={16} /> New Quotation
-              </button>
+                <Plus size={16} />
+                <span>New Quotation</span>
+              </Button>
             </div>
           )
         }
       />
 
       {/* View Switcher Tabs & Search Filter */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-sm">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-subtle">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('quotations')}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+            className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all shadow-subtle ${
               activeTab === 'quotations'
-                ? 'bg-brand-teal text-white shadow-sm'
-                : 'bg-app-secondary/40 text-app-text-muted hover:text-app-text'
+                ? 'bg-brand-indigo dark:bg-brand-indigo-bright text-white shadow-btn-primary dark:shadow-btn-primary-dark'
+                : 'bg-app-surface text-app-text-muted hover:bg-app-secondary hover:text-app-text border border-app-border'
             }`}
           >
             All Quotations ({rawQuotes.length})
@@ -216,10 +222,10 @@ export function QuotationsPage() {
             <button
               type="button"
               onClick={() => setActiveTab('templates')}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all shadow-subtle ${
                 activeTab === 'templates'
-                  ? 'bg-brand-teal text-white shadow-sm'
-                  : 'bg-app-secondary/40 text-app-text-muted hover:text-app-text'
+                  ? 'bg-brand-indigo dark:bg-brand-indigo-bright text-white shadow-btn-primary dark:shadow-btn-primary-dark'
+                  : 'bg-app-surface text-app-text-muted hover:bg-app-secondary hover:text-app-text border border-app-border'
               }`}
             >
               Reusable Templates ({rawTemplates.length})
@@ -228,14 +234,14 @@ export function QuotationsPage() {
         </div>
 
         {activeTab === 'quotations' && (
-          <div className="relative min-w-64">
-            <FiSearch className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
+          <div className="relative min-w-72">
+            <Search className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
             <input
               aria-label="Search quotations"
               placeholder="Search by quote #, client, or plan…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 w-full rounded-lg border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+              className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
             />
           </div>
         )}
@@ -245,10 +251,10 @@ export function QuotationsPage() {
       {activeTab === 'quotations' && (
         <>
           {filteredQuotes.length ? (
-            <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+                  <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                     <tr>
                       <th className="p-4">Quotation ID</th>
                       <th className="p-4">Customer Account</th>
@@ -261,7 +267,7 @@ export function QuotationsPage() {
                   </thead>
                   <tbody className="divide-y divide-app-border">
                     {filteredQuotes.map((quote) => (
-                      <tr key={quote._id} className="hover:bg-app-secondary/20 transition-colors">
+                      <tr key={quote._id} className="hover:bg-app-secondary/30 transition-colors">
                         <td className="p-4">
                           <strong className="text-sm font-bold text-app-text">{quote.quotationNumber}</strong>
                           <p className="mt-0.5 text-[11px] text-app-text-muted">Issued {date(quote.createdAt)}</p>
@@ -273,7 +279,7 @@ export function QuotationsPage() {
                           <p className="text-[11px] text-app-text-muted">{quote.customerSnapshot?.email}</p>
                         </td>
                         <td className="p-4">
-                          <div className="font-medium text-app-text">
+                          <div className="font-semibold text-app-text">
                             {quote.lines.map((l) => `${l.quantity} × ${l.planName}`).join(', ')}
                           </div>
                           <p className="mt-0.5 text-[11px] text-app-text-muted">
@@ -290,11 +296,11 @@ export function QuotationsPage() {
                           </span>
                         </td>
                         <td className="p-4">
-                          <span className="font-medium text-app-text">{date(quote.validUntil)}</span>
+                          <span className="font-semibold text-app-text">{date(quote.validUntil)}</span>
                         </td>
                         <td className="p-4 text-center">
                           <span
-                            className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${quoteStatusBadge(
+                            className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${quoteStatusBadge(
                               quote.status
                             )}`}
                           >
@@ -305,21 +311,21 @@ export function QuotationsPage() {
                           <div className="flex items-center justify-end gap-1.5">
                             {canManage && quote.status === 'DRAFT' && (
                               <>
-                                <button
-                                  type="button"
+                                <Button
+                                  size="sm"
                                   onClick={() => action.mutate({ id: quote._id, action: 'publish' })}
                                   disabled={action.isPending}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-brand-teal px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors"
                                 >
-                                  <FiSend size={12} /> Publish
-                                </button>
+                                  <Send size={12} />
+                                  <span>Publish</span>
+                                </Button>
                                 <button
                                   type="button"
                                   onClick={() => setDialog({ type: 'edit', quotation: quote })}
-                                  className="rounded-lg p-1 text-app-text-muted hover:bg-app-secondary hover:text-brand-teal transition-colors"
+                                  className="rounded-xl p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                                   title="Edit draft"
                                 >
-                                  <FiEdit size={14} />
+                                  <Edit size={14} />
                                 </button>
                                 <button
                                   type="button"
@@ -328,10 +334,10 @@ export function QuotationsPage() {
                                       removeDraft.mutate(quote._id);
                                     }
                                   }}
-                                  className="rounded-lg p-1 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
+                                  className="rounded-xl p-1.5 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
                                   title="Delete draft"
                                 >
-                                  <FiTrash2 size={14} />
+                                  <Trash2 size={14} />
                                 </button>
                               </>
                             )}
@@ -340,9 +346,9 @@ export function QuotationsPage() {
                                 type="button"
                                 disabled={email.isPending}
                                 onClick={() => email.mutate({ id: quote._id, quotationNumber: quote.quotationNumber })}
-                                className="inline-flex items-center gap-1 rounded-lg border border-app-border bg-app-surface px-2.5 py-1 text-xs font-medium text-app-text hover:border-brand-teal hover:text-brand-teal transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-app-border bg-app-surface px-2.5 py-1 text-xs font-semibold text-app-text shadow-subtle hover:border-brand-indigo dark:hover:border-brand-violet hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                               >
-                                <FiMail size={12} /> Email
+                                <Mail size={13} /> Email
                               </button>
                             )}
                             {quote.status === 'QUOTATION' && (
@@ -351,7 +357,7 @@ export function QuotationsPage() {
                                   type="button"
                                   disabled={action.isPending}
                                   onClick={() => action.mutate({ id: quote._id, action: 'accept' })}
-                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                                  className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
                                 >
                                   Accept
                                 </button>
@@ -363,21 +369,21 @@ export function QuotationsPage() {
                                       action.mutate({ id: quote._id, action: 'reject' });
                                     }
                                   }}
-                                  className="rounded-lg border border-app-border bg-transparent px-2.5 py-1 text-xs font-medium text-app-text hover:border-rose-500 hover:text-rose-500 transition-colors"
+                                  className="rounded-xl border border-app-border bg-app-surface px-2.5 py-1 text-xs font-semibold text-app-text hover:border-rose-500 hover:text-rose-500 transition-colors"
                                 >
                                   Reject
                                 </button>
                               </>
                             )}
                             {canManage && quote.status === 'CONFIRMED' && (
-                              <button
-                                type="button"
+                              <Button
+                                size="sm"
                                 disabled={action.isPending}
                                 onClick={() => action.mutate({ id: quote._id, action: 'convert' })}
-                                className="inline-flex items-center gap-1 rounded-lg bg-brand-gold px-2.5 py-1 text-xs font-bold text-slate-900 shadow-sm hover:bg-amber-400 transition-colors"
                               >
-                                <FiArrowRight size={13} /> Convert to Subscription
-                              </button>
+                                <span>Convert to Subscription</span>
+                                <ArrowRight size={13} />
+                              </Button>
                             )}
                           </div>
                         </td>
@@ -389,12 +395,12 @@ export function QuotationsPage() {
             </div>
           ) : (
             <EmptyState
-              icon={FiFileText}
+              icon={FileText}
               title="No quotations found"
               description={
                 search
-                  ? 'No quotations match the active search term.'
-                  : 'Create commercial proposals from plans or reusable presets.'
+                  ? 'No quotations match the active search query.'
+                  : 'Create commercial proposals from plans or reusable template bundles.'
               }
             />
           )}
@@ -405,10 +411,10 @@ export function QuotationsPage() {
       {activeTab === 'templates' && canManage && (
         <>
           {rawTemplates.length ? (
-            <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+                  <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                     <tr>
                       <th className="p-4">Template Name & Terms</th>
                       <th className="p-4">Preconfigured Plans</th>
@@ -419,7 +425,7 @@ export function QuotationsPage() {
                   </thead>
                   <tbody className="divide-y divide-app-border">
                     {rawTemplates.map((template) => (
-                      <tr key={template._id} className="hover:bg-app-secondary/20 transition-colors">
+                      <tr key={template._id} className="hover:bg-app-secondary/30 transition-colors">
                         <td className="p-4">
                           <strong className="text-sm font-bold text-app-text">{template.name}</strong>
                           <p className="mt-0.5 text-[11px] text-app-text-muted">
@@ -427,17 +433,15 @@ export function QuotationsPage() {
                           </p>
                         </td>
                         <td className="p-4">
-                          <span className="font-medium text-app-text">
+                          <span className="font-semibold text-app-text">
                             {template.lines.map((l) => `${l.quantity} × ${l.plan?.name || l.planName || 'Plan'}`).join(', ')}
                           </span>
                         </td>
-                        <td className="p-4 font-semibold text-app-text">{template.validityDays} days</td>
+                        <td className="p-4 font-bold text-app-text tabular-nums">{template.validityDays} days</td>
                         <td className="p-4 text-center">
                           <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                              template.status === 'ACTIVE'
-                                ? 'bg-emerald-500/15 text-emerald-500'
-                                : 'bg-app-secondary text-app-text-muted'
+                            className={`status ${
+                              template.status === 'ACTIVE' ? 'active' : 'inactive'
                             }`}
                           >
                             {template.status}
@@ -448,10 +452,10 @@ export function QuotationsPage() {
                             <button
                               type="button"
                               onClick={() => setDialog({ type: 'template', template })}
-                              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-teal transition-colors"
+                              className="rounded-xl p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                               title="Edit Template"
                             >
-                              <FiEdit size={14} />
+                              <Edit size={14} />
                             </button>
                             <button
                               type="button"
@@ -462,7 +466,7 @@ export function QuotationsPage() {
                                   payload: { status: template.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' },
                                 })
                               }
-                              className="rounded-lg border border-app-border bg-app-surface px-2 py-1 text-[11px] font-semibold text-app-text hover:bg-app-secondary transition-colors"
+                              className="rounded-xl border border-app-border bg-app-surface px-2.5 py-1 text-[11px] font-semibold text-app-text hover:bg-app-secondary transition-colors"
                             >
                               {template.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
                             </button>
@@ -476,9 +480,9 @@ export function QuotationsPage() {
             </div>
           ) : (
             <EmptyState
-              icon={FiLayers}
+              icon={Layers}
               title="No templates created yet"
-              description="Author reusable quote packages with pre-selected plans and standard terms."
+              description="Author reusable quote packages with pre-selected plans and standard conditions."
             />
           )}
         </>
@@ -600,20 +604,20 @@ function QuotationForm({ customers, plans, templates, busy, close, submit }) {
         </FormField>
 
         {!form.template && (
-          <div className="rounded-xl border border-app-border bg-app-secondary/20 p-4 space-y-3">
+          <div className="rounded-xl border border-app-border bg-app-secondary/25 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-app-text">Plan Line Items</span>
               <button
                 type="button"
                 onClick={() => setForm((c) => ({ ...c, lines: [...c.lines, { plan: '', quantity: '1' }] }))}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-indigo dark:text-brand-violet-light hover:underline"
               >
-                <FiPlus size={13} /> Add Line
+                <Plus size={13} /> Add Line
               </button>
             </div>
 
             {form.lines.map((line, index) => (
-              <div key={index} className="grid gap-2 sm:grid-cols-[1fr_7rem_auto] items-end">
+              <div key={index} className="grid gap-2.5 sm:grid-cols-[1fr_7rem_auto] items-end">
                 <FormField label={index === 0 ? 'Plan' : undefined} required>
                   <FormSelect
                     value={line.plan}
@@ -623,7 +627,7 @@ function QuotationForm({ customers, plans, templates, busy, close, submit }) {
                     <option value="">Select plan</option>
                     {plans.map((p) => (
                       <option key={p._id} value={p._id}>
-                        {p.name} · {money(p.billingPrice, p.currency)} / {p.billingFrequency.toLowerCase()}
+                        {p.name} · {money(p.billingPrice, p.currency)} / {p.billingFrequency?.toLowerCase()}
                       </option>
                     ))}
                   </FormSelect>
@@ -641,10 +645,10 @@ function QuotationForm({ customers, plans, templates, busy, close, submit }) {
                   type="button"
                   disabled={form.lines.length === 1}
                   onClick={() => setForm((c) => ({ ...c, lines: c.lines.filter((_, li) => li !== index) }))}
-                  className="h-10 rounded-lg p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30"
+                  className="h-10 rounded-xl p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30 border border-app-border"
                   title="Remove Line"
                 >
-                  <FiTrash2 size={16} />
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -674,7 +678,7 @@ function QuotationForm({ customers, plans, templates, busy, close, submit }) {
           </FormField>
         </div>
 
-        <FormField label="Custom Payment Terms & Notes">
+        <FormField label="Custom Payment Terms & Conditions">
           <FormTextarea
             name="paymentTerms"
             value={form.paymentTerms}
@@ -768,20 +772,20 @@ function TemplateForm({ template, plans, busy, close, submit }) {
           />
         </FormField>
 
-        <div className="rounded-xl border border-app-border bg-app-secondary/20 p-4 space-y-3">
+        <div className="rounded-xl border border-app-border bg-app-secondary/25 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-app-text">Preset Plans</span>
             <button
               type="button"
               onClick={() => setForm((c) => ({ ...c, lines: [...c.lines, { plan: '', quantity: '1' }] }))}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-indigo dark:text-brand-violet-light hover:underline"
             >
-              <FiPlus size={13} /> Add Plan
+              <Plus size={13} /> Add Plan
             </button>
           </div>
 
           {form.lines.map((line, index) => (
-            <div key={index} className="grid gap-2 sm:grid-cols-[1fr_7rem_auto] items-end">
+            <div key={index} className="grid gap-2.5 sm:grid-cols-[1fr_7rem_auto] items-end">
               <FormField label={index === 0 ? 'Plan' : undefined} required>
                 <FormSelect
                   value={line.plan}
@@ -809,9 +813,9 @@ function TemplateForm({ template, plans, busy, close, submit }) {
                 type="button"
                 disabled={form.lines.length === 1}
                 onClick={() => setForm((c) => ({ ...c, lines: c.lines.filter((_, li) => li !== index) }))}
-                className="h-10 rounded-lg p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30"
+                className="h-10 rounded-xl p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30 border border-app-border"
               >
-                <FiTrash2 size={16} />
+                <Trash2 size={16} />
               </button>
             </div>
           ))}
@@ -907,20 +911,20 @@ function DraftQuotationForm({ quotation, plans, busy, close, submit }) {
       close={close}
     >
       <form onSubmit={send} className="space-y-4">
-        <div className="rounded-xl border border-app-border bg-app-secondary/20 p-4 space-y-3">
+        <div className="rounded-xl border border-app-border bg-app-secondary/25 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-app-text">Plan Line Items</span>
             <button
               type="button"
               onClick={() => setForm((c) => ({ ...c, lines: [...c.lines, { plan: '', quantity: '1' }] }))}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-indigo dark:text-brand-violet-light hover:underline"
             >
-              <FiPlus size={13} /> Add Line
+              <Plus size={13} /> Add Line
             </button>
           </div>
 
           {form.lines.map((line, index) => (
-            <div key={index} className="grid gap-2 sm:grid-cols-[1fr_7rem_auto] items-end">
+            <div key={index} className="grid gap-2.5 sm:grid-cols-[1fr_7rem_auto] items-end">
               <FormField label={index === 0 ? 'Plan' : undefined} required>
                 <FormSelect
                   value={line.plan}
@@ -952,9 +956,9 @@ function DraftQuotationForm({ quotation, plans, busy, close, submit }) {
                 type="button"
                 disabled={form.lines.length === 1}
                 onClick={() => setForm((c) => ({ ...c, lines: c.lines.filter((_, li) => li !== index) }))}
-                className="h-10 rounded-lg p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30"
+                className="h-10 rounded-xl p-2 text-app-text-muted hover:bg-rose-500/10 hover:text-rose-500 transition-colors disabled:opacity-30 border border-app-border"
               >
-                <FiTrash2 size={16} />
+                <Trash2 size={16} />
               </button>
             </div>
           ))}

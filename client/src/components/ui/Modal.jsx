@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
-import { FiX } from 'react-icons/fi';
+import { X, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 
 const sizeMap = {
-  sm: 'max-w-[420px]',
-  md: 'max-w-[600px]',
-  lg: 'max-w-[800px]',
-  xl: 'max-w-[1000px]',
-  default: 'max-w-[640px]',
+  sm: 'max-w-[440px]',
+  md: 'max-w-[580px]',
+  lg: 'max-w-[780px]',
+  xl: 'max-w-[980px]',
+  default: 'max-w-[620px]',
 };
 
 /**
@@ -52,14 +52,14 @@ export function Modal({
     gsap.to(dialogRef.current, {
       opacity: 0,
       scale: 0.96,
-      y: 10,
-      duration: 0.18,
+      y: 8,
+      duration: 0.16,
       ease: 'power2.in',
     });
 
     gsap.to(backdropRef.current, {
       opacity: 0,
-      duration: 0.2,
+      duration: 0.18,
       ease: 'power2.in',
       onComplete: () => {
         close?.();
@@ -69,7 +69,6 @@ export function Modal({
 
   // Entrance animation & body scroll lock
   useEffect(() => {
-    // Lock body scroll
     const originalOverflow = document.body.style.overflow;
     const originalPaddingRight = document.body.style.paddingRight;
     const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -79,22 +78,20 @@ export function Modal({
       document.body.style.paddingRight = `${scrollBarWidth}px`;
     }
 
-    // GSAP entrance
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!prefersReducedMotion && backdropRef.current && dialogRef.current) {
       gsap.fromTo(
         backdropRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.22, ease: 'power2.out' }
+        { opacity: 1, duration: 0.2, ease: 'power2.out' }
       );
       gsap.fromTo(
         dialogRef.current,
-        { opacity: 0, scale: 0.95, y: 16 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.26, ease: 'power2.out' }
+        { opacity: 0, scale: 0.95, y: 14 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.24, ease: 'power3.out' }
       );
     }
 
-    // Escape key listener
     const onKeyDown = (e) => {
       if (closeOnEscape && e.key === 'Escape') {
         e.stopPropagation();
@@ -115,7 +112,7 @@ export function Modal({
   const modalElement = (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[100] w-screen h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-[#070D1E]/75 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[100] w-screen h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-black/60 dark:bg-black/80 backdrop-blur-md overflow-y-auto"
       onClick={(e) => {
         if (closeOnBackdrop && e.target === backdropRef.current) {
           handleClose();
@@ -130,7 +127,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="global-modal-title"
         className={cn(
-          'relative w-full max-h-[88dvh] flex flex-col rounded-2xl border border-app-border bg-app-surface text-app-text shadow-modal my-auto transition-colors',
+          'relative w-full max-h-[88dvh] flex flex-col rounded-2xl border border-app-border bg-app-surface text-app-text shadow-modal my-auto transition-colors duration-200',
           sizeMap[size] || sizeMap.default,
           className
         )}
@@ -138,10 +135,10 @@ export function Modal({
       >
         {/* Modal Header */}
         <div className="flex items-start justify-between border-b border-app-border p-5 sm:p-6 pb-4">
-          <div className="space-y-1 pr-6">
-            <div className="flex items-center gap-2.5">
+          <div className="space-y-1.5 pr-6">
+            <div className="flex items-center gap-2.5 flex-wrap">
               {badge && (
-                <span className="rounded-full bg-brand-gold/15 px-2.5 py-0.5 text-[11px] font-semibold text-brand-gold uppercase tracking-wider">
+                <span className="rounded-full bg-brand-violet/15 dark:bg-brand-violet/25 px-2.5 py-0.5 text-[11px] font-semibold text-brand-indigo dark:text-brand-violet-light uppercase tracking-wider border border-brand-violet/20">
                   {badge}
                 </span>
               )}
@@ -158,10 +155,10 @@ export function Modal({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-accent transition-colors shrink-0"
+            className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-app-ring transition-colors shrink-0"
             aria-label="Close dialog"
           >
-            <FiX size={19} />
+            <X size={18} />
           </button>
         </div>
 
@@ -172,7 +169,7 @@ export function Modal({
 
         {/* Optional Global Modal Footer */}
         {footer && (
-          <div className="border-t border-app-border bg-app-secondary/30 px-5 py-4 sm:px-6 flex items-center justify-end gap-3 rounded-b-2xl">
+          <div className="border-t border-app-border bg-app-secondary/40 px-5 py-4 sm:px-6 flex items-center justify-end gap-3 rounded-b-2xl">
             {footer}
           </div>
         )}
@@ -184,11 +181,11 @@ export function Modal({
 }
 
 /**
- * Standard Reusable Form Controls for the Midnight Executive Design System
+ * Standard Reusable Form Controls for the Obsidian & Violet Design System
  */
 export function FormField({ label, required, description, error, children, className = '' }) {
   return (
-    <label className={cn('flex flex-col gap-1.5 text-xs font-medium text-app-text', className)}>
+    <label className={cn('flex flex-col gap-1.5 text-xs font-semibold text-app-text', className)}>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1">
           {label}
@@ -196,7 +193,7 @@ export function FormField({ label, required, description, error, children, class
         </span>
       </div>
       {children}
-      {description && <p className="text-[11px] text-app-text-muted leading-normal">{description}</p>}
+      {description && <p className="text-[11px] font-normal text-app-text-muted leading-normal">{description}</p>}
       {error && <span className="text-[11px] font-medium text-rose-500">{error}</span>}
     </label>
   );
@@ -206,7 +203,7 @@ export function FormInput({ className = '', ...props }) {
   return (
     <input
       className={cn(
-        'h-10 w-full rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text placeholder:text-app-text-muted/60 transition-all focus:border-app-accent focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50 disabled:bg-app-secondary/40',
+        'h-10 w-full rounded-xl border border-app-border bg-app-surface px-3.5 py-2 text-sm text-app-text placeholder:text-app-text-muted/60 transition-all focus:border-brand-indigo dark:focus:border-brand-violet-light focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50 disabled:bg-app-secondary/40',
         className
       )}
       {...props}
@@ -218,7 +215,7 @@ export function FormSelect({ className = '', children, ...props }) {
   return (
     <select
       className={cn(
-        'h-10 w-full rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text transition-all focus:border-app-accent focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50',
+        'h-10 w-full rounded-xl border border-app-border bg-app-surface px-3.5 py-2 text-sm text-app-text transition-all focus:border-brand-indigo dark:focus:border-brand-violet-light focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50',
         className
       )}
       {...props}
@@ -232,7 +229,7 @@ export function FormTextarea({ className = '', ...props }) {
   return (
     <textarea
       className={cn(
-        'w-full min-h-[84px] rounded-lg border border-app-border bg-app-surface p-3 text-sm text-app-text placeholder:text-app-text-muted/60 transition-all focus:border-app-accent focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50 resize-y',
+        'w-full min-h-[88px] rounded-xl border border-app-border bg-app-surface p-3.5 text-sm text-app-text placeholder:text-app-text-muted/60 transition-all focus:border-brand-indigo dark:focus:border-brand-violet-light focus:ring-2 focus:ring-app-ring focus:outline-none disabled:opacity-50 resize-y',
         className
       )}
       {...props}
@@ -240,15 +237,22 @@ export function FormTextarea({ className = '', ...props }) {
   );
 }
 
-export function ModalFooter({ onCancel, cancelLabel = 'Cancel', submitLabel = 'Submit', busy = false, submitDisabled = false, submitVariant = 'default' }) {
+export function ModalFooter({
+  onCancel,
+  cancelLabel = 'Cancel',
+  submitLabel = 'Submit',
+  busy = false,
+  submitDisabled = false,
+  submitVariant = 'default',
+}) {
   return (
-    <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-app-border mt-4 w-full">
+    <div className="flex items-center justify-end gap-3 pt-5 border-t border-app-border mt-5 w-full">
       {onCancel && (
         <button
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="h-10 rounded-lg border border-app-border bg-transparent px-4 py-2 text-sm font-medium text-app-text hover:bg-app-secondary focus:outline-none focus:ring-2 focus:ring-app-ring transition-colors disabled:opacity-50"
+          className="h-10 rounded-xl border border-app-border bg-app-surface px-4 py-2 text-sm font-semibold text-app-text hover:bg-app-secondary focus:outline-none focus:ring-2 focus:ring-app-ring transition-colors disabled:opacity-50 shadow-subtle"
         >
           {cancelLabel}
         </button>
@@ -257,15 +261,15 @@ export function ModalFooter({ onCancel, cancelLabel = 'Cancel', submitLabel = 'S
         type="submit"
         disabled={busy || submitDisabled}
         className={cn(
-          'h-10 rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-app-ring disabled:opacity-50 inline-flex items-center justify-center gap-2',
+          'h-10 rounded-xl px-5 py-2 text-sm font-semibold text-white shadow-btn-primary dark:shadow-btn-primary-dark transition-all focus:outline-none focus:ring-2 focus:ring-app-ring disabled:opacity-50 inline-flex items-center justify-center gap-2',
           submitVariant === 'destructive'
             ? 'bg-rose-600 hover:bg-rose-700'
-            : 'bg-app-accent hover:bg-app-accent-hover'
+            : 'bg-brand-indigo dark:bg-brand-indigo-bright hover:bg-brand-indigo-deep dark:hover:bg-brand-violet'
         )}
       >
         {busy ? (
           <>
-            <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
             <span>Processing…</span>
           </>
         ) : (

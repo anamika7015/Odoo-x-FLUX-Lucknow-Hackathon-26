@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  FiClock,
-  FiEdit,
-  FiPlus,
-  FiSearch,
-  FiUsers,
-  FiMail,
-  FiPhone,
-  FiBriefcase,
-  FiDownload,
-  FiFileText,
-  FiCreditCard,
-  FiLayers,
-} from 'react-icons/fi';
+  Users,
+  Plus,
+  Search,
+  Mail,
+  Phone,
+  Briefcase,
+  Clock,
+  Edit,
+  Download,
+  Layers,
+  FileText,
+  CreditCard,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { api, errorMessage, unwrap } from '../services/api.js';
@@ -21,6 +24,7 @@ import { EmptyState } from '../components/EmptyState.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
 import { Modal, FormField, FormInput, FormSelect, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
+import { Button } from '../components/ui/Button.jsx';
 
 const toForm = (customer) =>
   customer
@@ -78,7 +82,7 @@ export function CustomersPage() {
 
   if (customers.isLoading) {
     return (
-      <PageTransition className="space-y-4">
+      <PageTransition className="space-y-4 page-wrap">
         <div className="h-24 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
         <div className="h-96 w-full rounded-2xl bg-app-surface/60 animate-pulse border border-app-border" />
       </PageTransition>
@@ -86,28 +90,26 @@ export function CustomersPage() {
   }
 
   return (
-    <PageTransition className="relative">
+    <PageTransition className="page-wrap">
       <PageHeader
         eyebrow="RELATIONSHIP DIRECTORY"
         title="Customer Accounts"
         description="Corporate contacts, billing locations, and commercial transaction records."
         actions={
           adminOrStaff && (
-            <button
-              onClick={() => setEditor({})}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-teal px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors"
-            >
-              <FiPlus size={16} /> New Customer
-            </button>
+            <Button onClick={() => setEditor({})}>
+              <Plus size={16} />
+              <span>Create Customer</span>
+            </Button>
           )
         }
       />
 
       {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-sm">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-app-border bg-app-surface p-4 shadow-subtle">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-72">
-            <FiSearch className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
+            <Search className="absolute left-3 top-2.5 text-app-text-muted" size={15} />
             <input
               aria-label="Search customers"
               placeholder="Search by name, company, email, or tax ID…"
@@ -116,7 +118,7 @@ export function CustomersPage() {
                 setPage(1);
                 setSearch(e.target.value);
               }}
-              className="h-9 w-full rounded-lg border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+              className="h-10 w-full rounded-xl border border-app-border bg-app-surface pl-9 pr-3 text-xs text-app-text placeholder:text-app-text-muted/60 transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
             />
           </div>
           <select
@@ -126,7 +128,7 @@ export function CustomersPage() {
               setPage(1);
               setStatus(e.target.value);
             }}
-            className="h-9 rounded-lg border border-app-border bg-app-surface px-3 text-xs font-medium text-app-text transition-colors focus:border-brand-teal focus:outline-none focus:ring-1 focus:ring-brand-teal"
+            className="h-10 rounded-xl border border-app-border bg-app-surface px-3 text-xs font-semibold text-app-text cursor-pointer transition-colors focus:border-brand-indigo dark:focus:border-brand-violet-light focus:outline-none focus:ring-2 focus:ring-app-ring"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -134,17 +136,17 @@ export function CustomersPage() {
           </select>
         </div>
 
-        <div className="text-xs text-app-text-muted font-medium">
+        <div className="text-xs text-app-text-muted font-semibold">
           Total: <span className="font-bold text-app-text tabular-nums">{customers.data?.meta?.total ?? 0}</span> accounts
         </div>
       </div>
 
       {/* Customers Table */}
       {customers.data?.items?.length ? (
-        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-subtle">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-app-border bg-app-secondary/40 text-app-text-muted uppercase font-semibold">
+              <thead className="border-b border-app-border bg-app-secondary/50 text-app-text-muted uppercase font-bold tracking-wider">
                 <tr>
                   <th className="p-4">Customer Contact</th>
                   <th className="p-4">Company & Identity</th>
@@ -164,21 +166,21 @@ export function CustomersPage() {
                     .toUpperCase();
 
                   return (
-                    <tr key={customer._id} className="hover:bg-app-secondary/20 transition-colors">
+                    <tr key={customer._id} className="hover:bg-app-secondary/30 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-teal/15 font-bold text-brand-teal text-xs shrink-0">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-indigo to-brand-violet text-white font-bold text-xs shadow-sm shrink-0">
                             {initials}
                           </div>
                           <div>
                             <strong className="text-sm font-bold text-app-text">{customer.fullName}</strong>
                             <div className="flex items-center gap-2 mt-0.5 text-app-text-muted text-[11px]">
                               <span className="flex items-center gap-1">
-                                <FiMail size={12} /> {customer.email}
+                                <Mail size={12} /> {customer.email}
                               </span>
                               {customer.phone && (
                                 <span className="flex items-center gap-1">
-                                  · <FiPhone size={11} /> {customer.phone}
+                                  · <Phone size={11} /> {customer.phone}
                                 </span>
                               )}
                             </div>
@@ -186,20 +188,18 @@ export function CustomersPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center gap-1.5 font-medium text-app-text">
-                          <FiBriefcase size={13} className="text-app-text-muted" />
+                        <div className="flex items-center gap-1.5 font-semibold text-app-text">
+                          <Building2 size={14} className="text-app-text-muted" />
                           <span>{customer.companyName || '—'}</span>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="font-mono text-xs text-app-text-muted">{customer.taxId || '—'}</span>
+                        <span className="font-mono text-xs text-app-text-muted font-medium">{customer.taxId || '—'}</span>
                       </td>
                       <td className="p-4 text-center">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                            customer.status === 'ACTIVE'
-                              ? 'bg-emerald-500/15 text-emerald-500'
-                              : 'bg-app-secondary text-app-text-muted'
+                          className={`status ${
+                            customer.status === 'ACTIVE' ? 'active' : 'inactive'
                           }`}
                         >
                           {customer.status}
@@ -209,9 +209,9 @@ export function CustomersPage() {
                         <button
                           type="button"
                           onClick={() => setHistory(customer)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-2.5 py-1 text-xs font-medium text-app-text hover:border-brand-teal hover:text-brand-teal transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-app-border bg-app-surface px-3 py-1 text-xs font-semibold text-app-text shadow-subtle hover:border-brand-indigo dark:hover:border-brand-violet hover:text-brand-indigo dark:hover:text-brand-violet-light transition-all"
                         >
-                          <FiClock size={13} />
+                          <Clock size={13} />
                           <span>Ledger</span>
                         </button>
                       </td>
@@ -220,9 +220,9 @@ export function CustomersPage() {
                           type="button"
                           onClick={() => setEditor(customer)}
                           title="Edit Customer"
-                          className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-teal transition-colors"
+                          className="rounded-xl p-1.5 text-app-text-muted hover:bg-app-secondary hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                         >
-                          <FiEdit size={15} />
+                          <Edit size={15} />
                         </button>
                       </td>
                     </tr>
@@ -234,7 +234,7 @@ export function CustomersPage() {
 
           {/* Pagination bar */}
           <div className="flex items-center justify-between border-t border-app-border px-4 py-3 text-xs text-app-text-muted">
-            <span>
+            <span className="font-medium">
               Showing {customers.data.items.length} of {customers.data.meta.total} customers
             </span>
             <div className="flex items-center gap-2">
@@ -242,27 +242,29 @@ export function CustomersPage() {
                 type="button"
                 disabled={page <= 1 || customers.isFetching}
                 onClick={() => setPage((v) => v - 1)}
-                className="rounded-lg border border-app-border px-3 py-1 text-xs font-medium text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
+                className="inline-flex items-center gap-1 rounded-xl border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
               >
-                Previous
+                <ChevronLeft size={13} />
+                <span>Previous</span>
               </button>
-              <span className="font-medium text-app-text">
+              <span className="font-bold text-app-text">
                 Page {page} of {Math.max(customers.data.meta.totalPages, 1)}
               </span>
               <button
                 type="button"
                 disabled={page >= customers.data.meta.totalPages || customers.isFetching}
                 onClick={() => setPage((v) => v + 1)}
-                className="rounded-lg border border-app-border px-3 py-1 text-xs font-medium text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
+                className="inline-flex items-center gap-1 rounded-xl border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary disabled:opacity-40 transition-colors"
               >
-                Next
+                <span>Next</span>
+                <ChevronRight size={13} />
               </button>
             </div>
           </div>
         </div>
       ) : (
         <EmptyState
-          icon={FiUsers}
+          icon={Users}
           title="No customer accounts found"
           description={
             search || status
@@ -330,15 +332,15 @@ function CustomerHistory({ customer, close }) {
       close={close}
     >
       {query.isLoading ? (
-        <div className="h-60 animate-pulse rounded-xl bg-app-secondary/50" />
+        <div className="h-60 animate-pulse rounded-2xl bg-app-secondary/50" />
       ) : query.isError ? (
-        <p className="text-xs text-rose-500">{errorMessage(query.error)}</p>
+        <p className="text-xs text-rose-500 font-medium">{errorMessage(query.error)}</p>
       ) : (
         <div className="space-y-6 text-xs text-app-text">
           {/* Subscriptions section */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <FiLayers className="text-brand-teal" size={15} />
+              <Layers className="text-brand-indigo dark:text-brand-violet-light" size={15} />
               <h4 className="font-bold uppercase tracking-wider text-app-text">Subscriptions</h4>
             </div>
             {historyData.subscriptions.length ? (
@@ -346,12 +348,15 @@ function CustomerHistory({ customer, close }) {
                 {historyData.subscriptions.map((item) => (
                   <div
                     key={item._id}
-                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/20 p-3"
+                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/25 p-3"
                   >
                     <div>
                       <strong className="text-app-text">{item.subscriptionNumber}</strong>
                       <p className="text-[11px] text-app-text-muted mt-0.5">
-                        Status: <span className="font-semibold text-app-text">{item.status}</span>
+                        Status:{' '}
+                        <span className="font-bold text-brand-indigo dark:text-brand-violet-light">
+                          {item.status}
+                        </span>
                       </p>
                     </div>
                     <span className="font-bold text-app-text tabular-nums">{money(item.subtotal, item.currency)}</span>
@@ -366,7 +371,7 @@ function CustomerHistory({ customer, close }) {
           {/* Invoices section */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <FiFileText className="text-brand-teal" size={15} />
+              <FileText className="text-brand-indigo dark:text-brand-violet-light" size={15} />
               <h4 className="font-bold uppercase tracking-wider text-app-text">Issued Invoices</h4>
             </div>
             {historyData.invoices.length ? (
@@ -374,13 +379,15 @@ function CustomerHistory({ customer, close }) {
                 {historyData.invoices.map((item) => (
                   <div
                     key={item._id}
-                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/20 p-3"
+                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/25 p-3"
                   >
                     <div>
                       <strong className="text-app-text">{item.invoiceNumber}</strong>
                       <p className="text-[11px] text-app-text-muted mt-0.5">
-                        Status: <span className="font-semibold text-app-text">{item.status}</span> · Outstanding:{' '}
-                        <span className="font-bold text-amber-500 tabular-nums">{money(item.outstanding, item.currency)}</span>
+                        Status: <span className="font-bold text-app-text">{item.status}</span> · Outstanding:{' '}
+                        <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                          {money(item.outstanding, item.currency)}
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -388,9 +395,9 @@ function CustomerHistory({ customer, close }) {
                       <button
                         type="button"
                         onClick={() => download(item)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-app-border bg-app-surface px-2.5 py-1 text-[11px] font-semibold text-app-text hover:border-brand-teal hover:text-brand-teal transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-app-border bg-app-surface px-2.5 py-1 text-[11px] font-semibold text-app-text shadow-subtle hover:border-brand-indigo dark:hover:border-brand-violet hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors"
                       >
-                        <FiDownload size={12} /> PDF
+                        <Download size={12} /> PDF
                       </button>
                     </div>
                   </div>
@@ -404,7 +411,7 @@ function CustomerHistory({ customer, close }) {
           {/* Payments section */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <FiCreditCard className="text-brand-teal" size={15} />
+              <CreditCard className="text-brand-indigo dark:text-brand-violet-light" size={15} />
               <h4 className="font-bold uppercase tracking-wider text-app-text">Recorded Payments</h4>
             </div>
             {historyData.payments.length ? (
@@ -412,7 +419,7 @@ function CustomerHistory({ customer, close }) {
                 {historyData.payments.map((item) => (
                   <div
                     key={item._id}
-                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/20 p-3"
+                    className="flex items-center justify-between rounded-xl border border-app-border bg-app-secondary/25 p-3"
                   >
                     <div>
                       <strong className="text-app-text">{item.invoice?.invoiceNumber || 'Direct Payment'}</strong>
@@ -420,7 +427,7 @@ function CustomerHistory({ customer, close }) {
                         {item.method?.replaceAll('_', ' ')} · {new Date(item.paymentDate).toLocaleDateString()}
                       </p>
                     </div>
-                    <strong className="font-bold text-emerald-500 tabular-nums">
+                    <strong className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                       {money(item.amount, item.invoice?.currency)}
                     </strong>
                   </div>
@@ -524,7 +531,7 @@ function CustomerForm({ customer, close, submit, busy }) {
         <ModalFooter
           onCancel={close}
           cancelLabel="Discard"
-          submitLabel={customer ? 'Save Changes' : 'Create Account'}
+          submitLabel={customer ? 'Save Changes' : 'Create Customer'}
           busy={busy}
         />
       </form>
