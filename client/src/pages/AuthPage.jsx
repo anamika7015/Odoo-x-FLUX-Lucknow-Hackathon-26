@@ -92,6 +92,13 @@ export function AuthPage({ mode: initialMode = 'login' }) {
     setErrors({});
   };
 
+  const returnToSignIn = () => {
+    setMode('login');
+    setForm(emptyForm);
+    setErrors({});
+    navigate('/login', { replace: true });
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     const schema = registering ? registerSchema : recovering ? emailSchema : resetting ? resetSchema : loginSchema;
@@ -424,7 +431,7 @@ export function AuthPage({ mode: initialMode = 'login' }) {
               <button
                 type="button"
                 className="mt-4 text-xs font-semibold text-app-text-muted hover:text-brand-indigo dark:hover:text-brand-violet-light transition-colors block text-center w-full"
-                onClick={() => navigate('/login')}
+                onClick={returnToSignIn}
               >
                 Back to sign in
               </button>
