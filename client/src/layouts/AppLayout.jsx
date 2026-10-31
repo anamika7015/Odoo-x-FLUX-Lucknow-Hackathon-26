@@ -144,15 +144,21 @@ export function AppLayout() {
       {/* Enterprise Obsidian Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-app-border bg-app-surface dark:bg-brand-obsidian transition-all duration-300 ease-in-out lg:static shadow-sm',
+          'fixed inset-y-0 left-0 z-50 flex h-dvh shrink-0 flex-col border-r border-app-border bg-app-surface dark:bg-brand-obsidian transition-all duration-300 ease-in-out shadow-sm lg:sticky lg:top-0 lg:bottom-auto',
           collapsed ? 'w-20' : 'w-64',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-app-border px-4">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-indigo to-brand-violet text-white shadow-md shadow-brand-indigo/30">
+        <div className={cn(
+          'flex h-16 items-center border-b border-app-border',
+          collapsed ? 'justify-center gap-1 px-1.5' : 'justify-between px-4'
+        )}>
+          <div className={cn('flex items-center overflow-hidden', collapsed ? '' : 'gap-3')}>
+            <div className={cn(
+              'flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-indigo to-brand-violet text-white shadow-md shadow-brand-indigo/30',
+              collapsed ? 'h-8 w-8' : 'h-10 w-10'
+            )}>
               <span className="font-extrabold text-lg tracking-wider text-white">B</span>
             </div>
             {!collapsed && (
@@ -172,7 +178,10 @@ export function AppLayout() {
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:grid h-7 w-7 place-items-center rounded-lg border border-app-border text-app-text-muted hover:bg-app-secondary hover:text-app-text transition-colors"
+            className={cn(
+              'hidden place-items-center rounded-lg border border-app-border text-app-text-muted hover:bg-app-secondary hover:text-app-text transition-colors lg:grid',
+              collapsed ? 'h-7 w-7 shrink-0' : 'h-7 w-7'
+            )}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -266,8 +275,8 @@ export function AppLayout() {
             )}
           </div>
 
-          <div className={cn('flex items-center gap-2', collapsed ? 'flex-col' : 'justify-between px-1')}>
-            <ThemeSelect />
+          <div className={cn('flex items-center gap-2', collapsed ? 'justify-center' : 'justify-between px-1')}>
+            <ThemeSelect compact={collapsed} />
             <button
               type="button"
               onClick={logout}

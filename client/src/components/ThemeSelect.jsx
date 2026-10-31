@@ -3,7 +3,7 @@ import { Moon, Sun, Monitor } from 'lucide-react';
 import { applyTheme, getTheme } from '../lib/theme.js';
 import { cn } from '../lib/utils.js';
 
-export function ThemeSelect({ className = '' }) {
+export function ThemeSelect({ className = '', compact = false }) {
   const [theme, setTheme] = useState(getTheme());
 
   useEffect(() => {
@@ -23,7 +23,10 @@ export function ThemeSelect({ className = '' }) {
 
   return (
     <div className={cn('relative inline-flex items-center', className)}>
-      <div className="flex items-center gap-1.5 rounded-xl border border-app-border bg-app-surface/90 px-2.5 py-1.5 shadow-subtle hover:border-brand-violet/40 transition-colors">
+      <div className={cn(
+        'flex items-center rounded-xl border border-app-border bg-app-surface/90 shadow-subtle hover:border-brand-violet/40 transition-colors',
+        compact ? 'h-8 w-8 justify-center' : 'gap-1.5 px-2.5 py-1.5'
+      )}>
         <span className="text-brand-indigo dark:text-brand-violet-light shrink-0">
           {theme === 'dark' ? (
             <Moon size={15} strokeWidth={2} />
@@ -37,7 +40,10 @@ export function ThemeSelect({ className = '' }) {
           aria-label="Theme preference"
           value={theme}
           onChange={change}
-          className="bg-transparent text-xs font-semibold text-app-text outline-none cursor-pointer pr-1"
+          className={cn(
+            'bg-transparent text-xs font-semibold text-app-text outline-none cursor-pointer',
+            compact ? 'absolute inset-0 h-full w-full opacity-0' : 'pr-1'
+          )}
         >
           <option value="light" className="bg-app-surface text-app-text">Light</option>
           <option value="dark" className="bg-app-surface text-app-text">Dark</option>

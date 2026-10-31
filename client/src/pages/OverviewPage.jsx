@@ -21,7 +21,6 @@ import {
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
-import { ThreeBackground } from '../components/ThreeBackground.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
 import { api, unwrap } from '../services/api.js';
 import {
@@ -109,9 +108,7 @@ export function OverviewPage() {
   const chartPalette = ['#5145CD', '#9065EF', '#3B82F6', '#B8A8F8', '#10B981', '#F59E0B'];
 
   return (
-    <PageTransition className="relative">
-      <ThreeBackground variant="subtle" />
-
+    <PageTransition className="relative lg:pl-4">
       <PageHeader
         eyebrow="EXECUTIVE DASHBOARD"
         title="Workspace Performance"
