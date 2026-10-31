@@ -10,13 +10,15 @@
 
 ## Calculation policy
 
-`line gross = unit price × quantity`
+`effective unit price = plan price + selected variant additional price`
+
+`line gross = effective unit price × quantity`
 
 `eligible discount = fixed amount or rounded percentage, capped at gross`
 
 `taxable amount = gross − allocated discount`
 
-`line tax = round(taxable amount × frozen tax rate)`
+`line tax = half-up-round(subtotal × frozen tax rate)`
 
 `invoice total = sum(line totals)`
 
@@ -24,6 +26,6 @@
 
 - Percentage rounding is half-up at paise level; discount allocation remainders are deterministic.
 - Discounts must be active, valid by date, applicable, and within usage/minimum limits. Usage increments inside the invoice transaction.
-- Each line resolves the applicable effective tax rule then freezes its rate and amount in the invoice.
+- Each line resolves all active tax rules whose date window and product scope apply at period start, then freezes each rate and amount in the invoice. Tax rules are non-compounding and each applies to the pre-tax line subtotal.
 - `Paid` requires zero outstanding. Positive payments cannot exceed outstanding until a credit/refund workflow is explicitly added.
 - MRR is active recurring value normalized to a month; ARR is `MRR × 12`. Invoiced revenue, collected cash, and outstanding balances are separate metrics.

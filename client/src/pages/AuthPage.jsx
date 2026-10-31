@@ -1,11 +1,8 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from 'react';
 import { z } from 'zod';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FiSun, FiMoon } from 'react-icons/fi';
 import { api, errorMessage } from '../services/api.js';
 import { setUser } from '../store/store.js';
 import { ThemeSelect } from '../components/ThemeSelect.jsx';
@@ -16,24 +13,60 @@ import { Button } from '../components/ui/Button.jsx';
 import { Input } from '../components/ui/Primitives.jsx';
 
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$/;
-const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
-const registerSchema = z.object({ fullName: z.string().min(2), email: z.string().email(), password: z.string().regex(passwordRule, 'Use 9+ characters with upper, lower, and special characters.'), confirmPassword: z.string() }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
+const loginSchema = z.object({ email: z.string().trim().email(), password: z.string().min(1) });
+const registerSchema = z.object({ fullName: z.string().trim().min(2, 'Enter your full name.'), email: z.string().trim().email('Enter a valid email address.'), password: z.string().regex(passwordRule, 'Use at least 9 characters with uppercase, lowercase, and a special character.'), confirmPassword: z.string().min(1, 'Confirm your password.') }).refine((data) => data.password === data.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match.' });
+const emptyForm = { fullName: '', email: '', password: '', confirmPassword: '' };
 
 export function AuthPage() {
   const [registering, setRegistering] = useState(false);
-  const schema = registering ? registerSchema : loginSchema;
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(schema) });
+  const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const submit = async (values) => {
+
+  const updateField = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setErrors((current) => ({ ...current, [name]: undefined }));
+  };
+
+  const toggleMode = () => {
+    setRegistering((current) => !current);
+    setForm(emptyForm);
+    setErrors({});
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const schema = registering ? registerSchema : loginSchema;
+    const result = schema.safeParse(registering ? form : { email: form.email, password: form.password });
+    if (!result.success) {
+      const nextErrors = Object.fromEntries(result.error.issues.map((issue) => [issue.path[0], issue.message]));
+      setErrors(nextErrors);
+      toast.error('Check the highlighted fields and try again.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
     try {
-      const response = await api.post(registering ? '/auth/register' : '/auth/login', values);
+      const { email, password } = result.data;
+      const payload = registering
+        ? { fullName: result.data.fullName, email, password, confirmPassword: result.data.confirmPassword }
+        : { email, password };
+      const response = await api.post(registering ? '/auth/register' : '/auth/login', payload);
       dispatch(setUser(response.data.data.user));
       toast.success(registering ? 'Account created.' : 'Welcome back.');
-      navigate(location.state?.from?.pathname || '/');
+      navigate(location.state?.from?.pathname || '/', { replace: true });
     } catch (error) {
-      toast.error(errorMessage(error));
+      const message = errorMessage(error);
+      const details = error.response?.data?.error?.details?.fieldErrors;
+      if (details) setErrors(Object.fromEntries(Object.entries(details).map(([field, messages]) => [field, messages[0]])));
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,14 +95,14 @@ export function AuthPage() {
               </div>
               <ThemeSelect />
             </div>
-            <form className="space-y-4" onSubmit={handleSubmit(submit)}>
-              {registering && <Field label="Full name" error={errors.fullName}><Input {...register('fullName')} autoComplete="name" /></Field>}
-              <Field label="Email" error={errors.email}><Input type="email" {...register('email')} autoComplete="email" /></Field>
-              <Field label="Password" error={errors.password}><Input type="password" {...register('password')} autoComplete={registering ? 'new-password' : 'current-password'} /></Field>
-              {registering && <Field label="Confirm password" error={errors.confirmPassword}><Input type="password" {...register('confirmPassword')} autoComplete="new-password" /></Field>}
+            <form className="space-y-4" onSubmit={submit} noValidate>
+              {registering && <Field label="Full name" error={errors.fullName}><Input name="fullName" value={form.fullName} onChange={updateField} autoComplete="name" required /></Field>}
+              <Field label="Email" error={errors.email}><Input type="email" name="email" value={form.email} onChange={updateField} autoComplete="email" required /></Field>
+              <Field label="Password" error={errors.password}><Input type="password" name="password" value={form.password} onChange={updateField} autoComplete={registering ? 'new-password' : 'current-password'} required /></Field>
+              {registering && <Field label="Confirm password" error={errors.confirmPassword}><Input type="password" name="confirmPassword" value={form.confirmPassword} onChange={updateField} autoComplete="new-password" required /></Field>}
               <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? 'Please wait…' : registering ? 'Create account' : 'Sign in'}</Button>
             </form>
-            <button className="mt-4 text-sm text-app-muted hover:text-app-accent" onClick={() => setRegistering((value) => !value)}>
+            <button type="button" className="mt-4 text-sm text-app-muted hover:text-app-accent" onClick={toggleMode}>
               {registering ? 'Already have an account? Sign in' : 'Need an account? Create one'}
             </button>
           </section>
@@ -84,7 +117,7 @@ function Field({ label, error, children }) {
     <label className="block space-y-1">
       <span className="text-sm font-medium text-app-text">{label}</span>
       {children}
-      {error && <em className="text-xs text-red-500">{error.message}</em>}
+      {error && <em className="text-xs text-red-500">{error}</em>}
     </label>
   );
 }

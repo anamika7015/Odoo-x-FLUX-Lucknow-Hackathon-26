@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiBox, FiLayers, FiUsers, FiCreditCard } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader.jsx';

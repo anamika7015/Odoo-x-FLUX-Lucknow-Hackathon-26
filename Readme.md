@@ -14,6 +14,10 @@ Phase 4 delivers product catalog APIs: admin-managed products and variants, serv
 
 Phase 5 delivers subscription-plan APIs plus the integrated frontend for the completed modules: registration/sign-in, protected workspace, light/dark/system theme control, products, and billing plans. The UI communicates only with the implemented backend endpoints; future modules are intentionally not shown as completed features.
 
+Phase 6 delivers quotation templates and a subscription lifecycle API: staff can draft and publish quotations from server-priced plan lines, customers can accept only their own published quotations, and staff can atomically convert accepted quotations into subscriptions. Subscription activation, pause/resume, closure, renewal, pagination, ownership checks, and transition history are included. Email delivery for quotations, discounts, and payment processing remain future work.
+
+Phase 7 delivers tax rules and invoice handling: admins manage date- and product-scoped percentage tax rules; staff generate a draft invoice for a subscription billing period, confirm or cancel it, and download a PDF. Amounts and tax are calculated on the server and snapshotted. A unique subscription-period index prevents duplicate invoices. Payment reconciliation and automatic due-period dispatch remain future work.
+
 ## Prerequisites
 
 - Node.js 20.11+ and npm 10+
@@ -62,6 +66,29 @@ All plan endpoints require authentication. Create and update require an ADMIN se
 
 - `GET/POST /api/v1/plans`
 - `GET/PATCH /api/v1/plans/:planId`
+
+## Quotation and subscription endpoints
+
+All endpoints require an authenticated session. Mutations require the CSRF token. Staff/admin create templates and quotations; customers can list/read/accept only quotations and subscriptions tied to their account.
+
+- `GET/POST /api/v1/quotations/templates`
+- `GET/POST /api/v1/quotations`
+- `GET /api/v1/quotations/:id`
+- `POST /api/v1/quotations/:id/publish` (ADMIN/STAFF)
+- `POST /api/v1/quotations/:id/accept` (owner or staff)
+- `POST /api/v1/quotations/:id/convert` (ADMIN/STAFF; transactional, one time)
+- `GET /api/v1/subscriptions` and `GET /api/v1/subscriptions/:id`
+- `POST /api/v1/subscriptions/:id/:action` where action is `activate`, `pause`, `resume`, `close`, or `renew`
+
+## Tax and invoice endpoints
+
+Tax reads require a session; only admins can create or update tax rules. Invoice reads and PDFs are restricted to the owning customer or internal staff. Staff/admin create and transition invoices with CSRF protection.
+
+- `GET/POST /api/v1/taxes`, `PATCH /api/v1/taxes/:taxId`
+- `GET /api/v1/invoices`
+- `POST /api/v1/invoices/from-subscription` with `subscription`, `periodStart`, and optional `dueDate`
+- `GET /api/v1/invoices/:invoiceId`, `GET /api/v1/invoices/:invoiceId/pdf`
+- `POST /api/v1/invoices/:invoiceId/confirm` or `/cancel`
 
 ## Frontend API configuration
 

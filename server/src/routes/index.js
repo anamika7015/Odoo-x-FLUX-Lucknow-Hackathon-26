@@ -4,6 +4,10 @@ import authRouter from './auth.routes.js';
 import productRouter from './product.routes.js';
 import customerRouter from './customer.routes.js';
 import planRouter from './plan.routes.js';
+import subscriptionRouter from './subscription.routes.js';
+import quotationRouter from './quotation.routes.js';
+import taxRouter from './tax.routes.js';
+import invoiceRouter from './invoice.routes.js';
 
 const router = Router();
 router.use('/health', healthRouter);
@@ -11,5 +15,9 @@ router.use('/auth', authRouter);
 router.use('/products', productRouter);
 router.use('/customers', customerRouter);
 router.use('/plans', planRouter);
+router.use('/subscriptions', subscriptionRouter);
+router.use('/quotations', quotationRouter);
+router.use('/taxes', taxRouter);
+router.use('/invoices', invoiceRouter);
 
 export default router;

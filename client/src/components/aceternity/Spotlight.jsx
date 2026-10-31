@@ -1,3 +1,4 @@
+import React from 'react';
 import { cn } from '../../lib/utils.js';
 
 export function Spotlight({ className = '', fill = 'rgba(129,140,248,0.25)' }) {

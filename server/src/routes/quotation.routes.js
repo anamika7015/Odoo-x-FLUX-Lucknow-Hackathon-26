@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import * as controller from '../controllers/subscription.controller.js';
+import { requireAuth, requireRoles } from '../middleware/auth.middleware.js';
+import { requireCsrf } from '../middleware/csrf.middleware.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.middleware.js';
+import { roles } from '../models/user.model.js';
+import { asyncHandler } from '../utils/async-handler.js';
+import { createQuotationSchema, createTemplateSchema, listQuotationQuerySchema, resourceParamsSchema } from '../validators/quotation.validator.js';
+
+const router = Router();
+router.use(requireAuth);
+router.get('/templates', validateQuery(z.object({ page: z.coerce.number().int().positive().default(1), limit: z.coerce.number().int().min(1).max(100).default(20), status: z.enum(['ACTIVE', 'INACTIVE']).optional() })), asyncHandler(controller.listTemplates));
+router.post('/templates', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateBody(createTemplateSchema), asyncHandler(controller.createTemplate));
+router.get('/', validateQuery(listQuotationQuerySchema), asyncHandler(controller.listQuotations));
+router.post('/', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateBody(createQuotationSchema), asyncHandler(controller.createQuotation));
+router.get('/:id', validateParams(resourceParamsSchema), asyncHandler(controller.getQuotation));
+router.post('/:id/publish', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateParams(resourceParamsSchema), asyncHandler(controller.publishQuotation));
+router.post('/:id/accept', requireCsrf, validateParams(resourceParamsSchema), asyncHandler(controller.acceptQuotation));
+router.post('/:id/convert', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateParams(resourceParamsSchema), asyncHandler(controller.convertQuotation));
+export default router;

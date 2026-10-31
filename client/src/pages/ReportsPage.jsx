@@ -1,3 +1,4 @@
+import React from 'react';
 import { FiBarChart2 } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.jsx';

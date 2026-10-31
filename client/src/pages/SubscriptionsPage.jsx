@@ -1,3 +1,4 @@
+import React from 'react';
 import { FiShoppingBag } from 'react-icons/fi';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';

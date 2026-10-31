@@ -1,3 +1,4 @@
+import React from 'react';
 import { cn } from '../lib/utils.js';
 
 export function PageHeader({ eyebrow, title, description, actions }) {

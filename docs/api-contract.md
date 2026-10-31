@@ -9,10 +9,10 @@ Base URL: `/api/v1`. Successful JSON follows `{ "success": true, "data": {}, "me
 | Customers | `/customers` CRUD and histories | admin/staff; customer owns self |
 | Products | `/products` and variants | admin write; internal read |
 | Plans | `/plans` | admin write; internal read |
-| Quotations | `/quotations` send, accept, convert | admin/staff; owned customer read |
-| Subscriptions | `/subscriptions` lifecycle operations | role + ownership |
-| Invoices | `/invoices` lifecycle/email/PDF | staff/admin; owned customer read |
-| Taxes / Discounts | `/taxes`, `/discounts` | admin write |
+| Quotations | `/quotations` templates, create, publish, accept, convert | admin/staff write; owned customer read/accept |
+| Subscriptions | `/subscriptions` list, inspect, activate, pause, resume, close, renew | role + ownership |
+| Invoices | `/invoices` subscription-period draft, confirm/cancel, PDF | staff/admin write; owned customer read/PDF |
+| Taxes / Discounts | `/taxes`, `/discounts` | admin write; tax rules freeze on invoice lines |
 | Payments | `/payments` record/reconcile | staff/admin; owned customer read |
 | Reports | `/reports` aggregation endpoints | admin; limited staff |
 | Notifications | `/notifications` list/mark-read | own notifications |
