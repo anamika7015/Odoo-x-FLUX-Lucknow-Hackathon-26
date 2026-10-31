@@ -38,3 +38,18 @@
 .spinner { width: 24px; height: 24px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.notification-area { position: relative; }
+.notification-trigger { position: relative; display: grid; place-items: center; border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; padding: 4px; }
+.notification-count { position: absolute; top: -5px; right: -7px; min-width: 16px; height: 16px; display: grid; place-items: center; padding: 0 3px; border-radius: 999px; background: var(--color-accent); color: white; font-size: 10px; font-weight: 700; }
+.notification-menu { position: absolute; top: 36px; right: 0; z-index: 20; width: min(360px, calc(100vw - 32px)); max-height: 420px; overflow: auto; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); box-shadow: 0 16px 40px #0002; color: var(--color-text); }
+.notification-menu > header { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px; border-bottom: 1px solid var(--color-border); }
+.notification-menu > header button { border: 0; background: transparent; color: var(--color-accent); cursor: pointer; font-size: 12px; }
+.notification-menu > header button:disabled { opacity: .45; cursor: default; }
+.notification-empty { padding: 22px 15px; color: var(--color-text-muted); font-size: 13px; }
+.notification-item { width: 100%; display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 12px 15px; border: 0; border-bottom: 1px solid var(--color-border); text-align: left; background: transparent; color: inherit; cursor: pointer; }
+.notification-item:hover,.notification-item.unread { background: var(--color-surface-secondary); }
+.notification-item strong,.notification-item small { display: block; }
+.notification-item strong { font-size: 13px; }
+.notification-item small { margin-top: 4px; color: var(--color-text-muted); font-size: 12px; line-height: 1.45; }
+@media (max-width: 760px) { .topbar-icons { display: flex; gap: 0; } .topbar-icons > span { display: none; } }
+

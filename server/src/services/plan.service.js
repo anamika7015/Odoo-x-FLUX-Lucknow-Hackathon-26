@@ -1,6 +1,7 @@
 import { Plan } from '../models/plan.model.js';
 import { Product } from '../models/product.model.js';
 import { AppError } from '../utils/app-error.js';
+import { trustedFilter } from '../utils/trusted-filter.js';
 
 const normalize = (value) => value.trim().toLowerCase();
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -28,7 +29,8 @@ export async function createPlan(input) { await verifyProduct(input.product); re
 export async function listPlans({ page, limit, product, status, billingFrequency, search }) {
   const filter = { ...(product ? { product } : {}), ...(status ? { status } : {}), ...(billingFrequency ? { billingFrequency } : {}) };
   if (search) filter.name = { $regex: escapeRegex(search), $options: 'i' };
-  const [items, total] = await Promise.all([Plan.find(filter).populate('product', 'name productType status').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Plan.countDocuments(filter)]);
+  const safeFilter = trustedFilter(filter);
+  const [items, total] = await Promise.all([Plan.find(safeFilter).populate('product', 'name productType status').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Plan.countDocuments(safeFilter)]);
   return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 }
 export async function getPlan(planId) { const plan = await Plan.findById(planId).populate('product', 'name productType status'); if (!plan) throw new AppError('Plan not found.', { statusCode: 404, code: 'PLAN_NOT_FOUND' }); return plan; }

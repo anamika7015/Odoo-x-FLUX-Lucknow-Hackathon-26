@@ -8,6 +8,11 @@ import subscriptionRouter from './subscription.routes.js';
 import quotationRouter from './quotation.routes.js';
 import taxRouter from './tax.routes.js';
 import invoiceRouter from './invoice.routes.js';
+import paymentRouter from './payment.routes.js';
+import discountRouter from './discount.routes.js';
+import reportRouter from './report.routes.js';
+import userRouter from './user.routes.js';
+import notificationRouter from './notification.routes.js';
 
 const router = Router();
 router.use('/health', healthRouter);
@@ -19,5 +24,10 @@ router.use('/subscriptions', subscriptionRouter);
 router.use('/quotations', quotationRouter);
 router.use('/taxes', taxRouter);
 router.use('/invoices', invoiceRouter);
+router.use('/payments', paymentRouter);
+router.use('/discounts', discountRouter);
+router.use('/reports', reportRouter);
+router.use('/users', userRouter);
+router.use('/notifications', notificationRouter);
 
 export default router;

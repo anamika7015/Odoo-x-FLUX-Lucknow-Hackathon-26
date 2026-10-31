@@ -5,14 +5,16 @@ import { requireCsrf } from '../middleware/csrf.middleware.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.middleware.js';
 import { roles } from '../models/user.model.js';
 import { asyncHandler } from '../utils/async-handler.js';
-import { createInvoiceSchema, invoiceActionSchema, invoiceParamsSchema, listInvoiceQuerySchema } from '../validators/invoice.validator.js';
+import { createInvoiceSchema, invoiceActionSchema, invoiceParamsSchema, listInvoiceQuerySchema, updateDraftInvoiceSchema } from '../validators/invoice.validator.js';
 import { z } from 'zod';
 
 const router = Router();
 router.use(requireAuth);
 router.get('/', validateQuery(listInvoiceQuerySchema), asyncHandler(controller.listInvoices));
 router.post('/from-subscription', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateBody(createInvoiceSchema), asyncHandler(controller.createInvoice));
+router.patch('/:invoiceId', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateParams(invoiceParamsSchema), validateBody(updateDraftInvoiceSchema), asyncHandler(controller.updateDraftInvoice));
 router.get('/:invoiceId/pdf', validateParams(invoiceParamsSchema), asyncHandler(controller.downloadInvoicePdf));
+router.post('/:invoiceId/email', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateParams(invoiceParamsSchema), asyncHandler(controller.emailInvoice));
 router.get('/:invoiceId', validateParams(invoiceParamsSchema), asyncHandler(controller.getInvoice));
 router.post('/:invoiceId/:action', requireRoles(roles.ADMIN, roles.STAFF), requireCsrf, validateParams(invoiceParamsSchema.extend({ action: z.enum(['confirm', 'cancel']) })), validateBody(invoiceActionSchema), asyncHandler(controller.transitionInvoice));
 export default router;

@@ -15,6 +15,8 @@ for (const envPath of candidateEnvPaths) {
 }
 
 const booleanFromEnvironment = z.enum(['true', 'false']).transform((value) => value === 'true');
+const optionalEmail = z.preprocess((value) => value === '' ? undefined : value, z.string().trim().email().optional());
+const optionalSecret = z.preprocess((value) => value === '' ? undefined : value, z.string().min(12).optional());
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -31,6 +33,10 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().default('Brightloop Software <no-reply@example.com>'),
+  DEMO_ADMIN_EMAIL: optionalEmail,
+  DEMO_ADMIN_PASSWORD: optionalSecret,
+  DEMO_CUSTOMER_EMAIL: optionalEmail,
+  DEMO_CUSTOMER_PASSWORD: optionalSecret,
 });
 
 const parsed = schema.safeParse(process.env);
@@ -40,6 +46,9 @@ if (!parsed.success) {
 }
 
 const values = parsed.data;
+for (const [emailKey, passwordKey] of [['DEMO_ADMIN_EMAIL', 'DEMO_ADMIN_PASSWORD'], ['DEMO_CUSTOMER_EMAIL', 'DEMO_CUSTOMER_PASSWORD']]) {
+  if (Boolean(values[emailKey]) !== Boolean(values[passwordKey])) throw new Error(`${emailKey} and ${passwordKey} must be configured together.`);
+}
 const origins = values.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean);
 
 if (values.NODE_ENV === 'production' && (!values.COOKIE_SECURE || origins.some((origin) => !origin.startsWith('https://')) || values.JWT_ACCESS_SECRET.length < 32 || values.JWT_REFRESH_SECRET.length < 32)) {
@@ -59,4 +68,8 @@ export const config = Object.freeze({
   jwtAccessSecret: values.JWT_ACCESS_SECRET,
   jwtRefreshSecret: values.JWT_REFRESH_SECRET,
   smtp: { host: values.SMTP_HOST, port: values.SMTP_PORT, user: values.SMTP_USER, password: values.SMTP_PASSWORD, from: values.SMTP_FROM },
+  demo: {
+    admin: values.DEMO_ADMIN_EMAIL && values.DEMO_ADMIN_PASSWORD ? { email: values.DEMO_ADMIN_EMAIL.toLowerCase(), password: values.DEMO_ADMIN_PASSWORD } : undefined,
+    customer: values.DEMO_CUSTOMER_EMAIL && values.DEMO_CUSTOMER_PASSWORD ? { email: values.DEMO_CUSTOMER_EMAIL.toLowerCase(), password: values.DEMO_CUSTOMER_PASSWORD } : undefined,
+  },
 });

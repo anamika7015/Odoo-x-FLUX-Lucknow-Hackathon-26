@@ -3,7 +3,7 @@ import { createQuotationSchema, createTemplateSchema, transitionSchema } from '.
 
 describe('quotation and subscription request rules', () => {
   it('accepts quotation lines with server-resolved plans and bounded quantities', () => {
-    const base = { customer: 'a'.repeat(24), lines: [{ plan: 'b'.repeat(24), quantity: 3 }] };
+    const base = { customer: 'a'.repeat(24), lines: [{ plan: 'b'.repeat(24), quantity: 3 }], discountCode: 'SAVE20' };
     expect(createQuotationSchema.safeParse(base).success).toBe(true);
     expect(createQuotationSchema.safeParse({ ...base, lines: [{ ...base.lines[0], quantity: 0 }] }).success).toBe(false);
     expect(createQuotationSchema.safeParse({ customer: base.customer }).success).toBe(false);

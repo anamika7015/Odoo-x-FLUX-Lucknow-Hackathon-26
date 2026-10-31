@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
 const objectId = z.string().regex(/^[a-fA-F0-9]{24}$/, 'Invalid identifier.');
+const optionalDate = z.coerce.date().nullable().optional();
 const fields = z.object({
   name: z.string().trim().min(2).max(120),
   rateBasisPoints: z.coerce.number().int().min(0).max(10_000),
   appliesTo: z.array(objectId).max(100).default([]),
-  effectiveFrom: z.coerce.date().optional(),
-  effectiveUntil: z.coerce.date().optional(),
+  effectiveFrom: optionalDate,
+  effectiveUntil: optionalDate,
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 const validWindow = (value, context) => {

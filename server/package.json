@@ -1,6 +1,6 @@
 {
   "name": "@brightloop/server", "private": true, "version": "0.1.0", "type": "module",
-  "scripts": { "dev": "node --watch src/server.js", "start": "node src/server.js", "build": "node -e \"console.log('Server uses native ESM; no build step required.')\"", "test": "vitest run", "bootstrap:admin": "node src/scripts/bootstrap-admin.js" },
+  "scripts": { "dev": "node --watch src/server.js", "start": "node src/server.js", "build": "node -e \"console.log('Server uses native ESM; no build step required.')\"", "test": "vitest run", "bootstrap:admin": "node src/scripts/bootstrap-admin.js", "seed:demo": "node src/scripts/seed-demo.js", "reset:demo": "node src/scripts/reset-demo.js" },
   "dependencies": {
     "bcryptjs": "^2.4.3", "cookie-parser": "^1.4.7", "cors": "^2.8.5", "dotenv": "^16.4.5", "express": "^4.21.1", "express-rate-limit": "^7.4.1", "express-validator": "^7.2.0", "helmet": "^8.0.0", "jsonwebtoken": "^9.0.2", "mongoose": "^8.8.0", "node-cron": "^3.0.3", "nodemailer": "^6.9.16", "pdfkit": "^0.15.0", "sanitize-html": "^2.13.1", "zod": "^3.23.8"
   },

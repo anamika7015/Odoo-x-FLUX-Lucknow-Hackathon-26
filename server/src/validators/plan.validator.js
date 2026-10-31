@@ -4,7 +4,8 @@ import { billingFrequencies, planStatuses } from '../models/plan.model.js';
 const objectId = z.string().regex(/^[a-fA-F0-9]{24}$/, 'Invalid identifier.');
 const money = z.coerce.number().int().nonnegative('Amounts must be non-negative integer paise.');
 const date = z.coerce.date();
-const optionalDate = z.union([date, z.null()]).optional();
+// Test null before coercion; z.coerce.date() otherwise converts null to the Unix epoch.
+const optionalDate = z.union([z.null(), date]).optional();
 
 const planFields = z.object({
   name: z.string().trim().min(2).max(160), product: objectId, description: z.string().trim().max(4_000).optional(), billingPrice: money,

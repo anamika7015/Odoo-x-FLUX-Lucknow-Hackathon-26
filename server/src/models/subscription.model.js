@@ -25,6 +25,7 @@ const subscriptionSchema = new mongoose.Schema({
   currency: { type: String, required: true },
   subtotal: { type: Number, required: true, min: 0 },
   paymentTerms: { type: String, trim: true, maxlength: 2_000, default: '' },
+  discountCode: { type: String, trim: true, uppercase: true, maxlength: 40 },
   status: { type: String, enum: Object.values(subscriptionStatuses), default: subscriptionStatuses.CONFIRMED, index: true },
   startDate: { type: Date, required: true },
   expiryDate: { type: Date },
@@ -39,4 +40,5 @@ const subscriptionSchema = new mongoose.Schema({
 
 subscriptionSchema.index({ status: 1, nextBillingDate: 1 });
 subscriptionSchema.index({ customer: 1, createdAt: -1 });
+subscriptionSchema.index({ status: 1, createdAt: -1 });
 export const Subscription = mongoose.model('Subscription', subscriptionSchema);

@@ -2,7 +2,7 @@ import axios from 'axios';
 export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', withCredentials: true, headers: { 'Content-Type': 'application/json' } });
 export async function initializeCsrf() { const { data } = await api.get('/auth/csrf'); api.defaults.headers.common['X-CSRF-Token'] = data.data.csrfToken; }
 export const unwrap = (response) => response.data.data;
-export const errorMessage = (error) => error.response?.data?.error?.message || 'Something went wrong. Please try again.';
+export const errorMessage = (error) => error.response?.data?.error?.message || (!error.response ? 'Cannot reach the Brightloop API. Start the backend and check its database connection.' : 'Something went wrong. Please try again.');
 
 let refreshInFlight;
 api.interceptors.response.use((response) => response, async (error) => {

@@ -9,7 +9,7 @@ import { createTaxSchema, listTaxQuerySchema, taxParamsSchema, updateTaxSchema }
 
 const router = Router();
 router.use(requireAuth);
-router.get('/', validateQuery(listTaxQuerySchema), asyncHandler(controller.listTaxes));
+router.get('/', requireRoles(roles.ADMIN, roles.STAFF), validateQuery(listTaxQuerySchema), asyncHandler(controller.listTaxes));
 router.post('/', requireRoles(roles.ADMIN), requireCsrf, validateBody(createTaxSchema), asyncHandler(controller.createTax));
 router.patch('/:taxId', requireRoles(roles.ADMIN), requireCsrf, validateParams(taxParamsSchema), validateBody(updateTaxSchema), asyncHandler(controller.updateTax));
 export default router;

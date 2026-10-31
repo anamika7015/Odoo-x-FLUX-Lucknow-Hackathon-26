@@ -11,6 +11,7 @@ export const createCustomerSchema = z.object({
 });
 
 export const updateCustomerSchema = createCustomerSchema.partial().refine((value) => Object.keys(value).length > 0, 'At least one field must be provided.');
+export const updateOwnCustomerSchema = z.object({ phone: z.string().trim().max(40).optional(), companyName: z.string().trim().max(160).optional(), billingAddress: z.string().trim().max(1_000).optional() }).refine((value) => Object.keys(value).length > 0, 'At least one field must be provided.');
 
 export const listCustomersQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),

@@ -14,9 +14,13 @@ Phase 4 delivers product catalog APIs: admin-managed products and variants, serv
 
 Phase 5 delivers subscription-plan APIs plus the integrated frontend for the completed modules: registration/sign-in, protected workspace, light/dark/system theme control, products, and billing plans. The UI communicates only with the implemented backend endpoints; future modules are intentionally not shown as completed features.
 
-Phase 6 delivers quotation templates and a subscription lifecycle API: staff can draft and publish quotations from server-priced plan lines, customers can accept only their own published quotations, and staff can atomically convert accepted quotations into subscriptions. Subscription activation, pause/resume, closure, renewal, pagination, ownership checks, and transition history are included. Email delivery for quotations, discounts, and payment processing remain future work.
+Phase 6 delivers quotation templates and a subscription lifecycle API: staff can draft and publish quotations from server-priced plan lines, customers can accept only their own published quotations, and staff can atomically convert accepted quotations into subscriptions. Subscription activation, pause/resume, closure, renewal, pagination, ownership checks, and transition history are included. Quotation email delivery remains future work.
 
-Phase 7 delivers tax rules and invoice handling: admins manage date- and product-scoped percentage tax rules; staff generate a draft invoice for a subscription billing period, confirm or cancel it, and download a PDF. Amounts and tax are calculated on the server and snapshotted. A unique subscription-period index prevents duplicate invoices. Payment reconciliation and automatic due-period dispatch remain future work.
+Phase 7 delivers tax rules and invoice handling: admins manage date- and product-scoped percentage tax rules; staff generate a draft invoice for a subscription billing period, confirm or cancel it, and download a PDF. Amounts and tax are calculated on the server and snapshotted. A unique subscription-period index prevents duplicate invoices. Automatic due-period dispatch remains future work.
+
+Phase 8 delivers admin discount rules with fixed or percentage values, product or subscription scope, minimum purchase/quantity, active dates, usage limits, automatic application, and quote discount codes. Invoice discount allocation and usage increments are atomic with invoice creation; invoice lines snapshot applied discounts before tax calculation.
+
+Phase 9 delivers append-only payment reconciliation: staff/admin record cash, bank transfer, card, UPI, or other receipts in paise. Partial payments leave an invoice confirmed with a reduced balance; only a zero balance marks it paid. Duplicate references and overpayments are rejected, and customer payment history is ownership-scoped.
 
 ## Prerequisites
 
@@ -90,9 +94,41 @@ Tax reads require a session; only admins can create or update tax rules. Invoice
 - `GET /api/v1/invoices/:invoiceId`, `GET /api/v1/invoices/:invoiceId/pdf`
 - `POST /api/v1/invoices/:invoiceId/confirm` or `/cancel`
 
+## Payment endpoints
+
+Staff/admin can record payments against confirmed invoices. Payments are append-only; partial payments keep the invoice confirmed with an outstanding balance, and the final allocation marks it paid. Customers can read only their own payment history.
+
+- `GET /api/v1/payments`
+- `POST /api/v1/payments` with invoice, amount in paise, method, date, optional reference, and note
+- `GET /api/v1/payments/:paymentId`
+
+## Discount endpoints
+
+Authenticated staff can view rules; only admins can create or update them.
+
+- `GET /api/v1/discounts`
+- `POST /api/v1/discounts`
+- `PATCH /api/v1/discounts/:discountId`
+
 ## Frontend API configuration
 
 The client defaults to `http://localhost:5000/api/v1`. To use another API base URL, set `VITE_API_URL` in `client/.env.local`.
+
+## Demo accounts and sample data
+
+Set `DEMO_ADMIN_EMAIL`, `DEMO_ADMIN_PASSWORD`, `DEMO_CUSTOMER_EMAIL`, and `DEMO_CUSTOMER_PASSWORD` in `server/.env` (or the root `.env`). Use unique passwords meeting the normal account password policy. Demo login remains disabled until these accounts and the sample data have been seeded.
+
+```bash
+npm run seed:demo --workspace=server
+```
+
+The seed command is idempotent and refuses to overwrite accounts that are not already marked as demo accounts. It is disabled in production. To remove the seeded records in a development/test database, run:
+
+```bash
+CONFIRM_DEMO_RESET=DELETE_DEMO_DATA npm run reset:demo --workspace=server
+```
+
+The reset command refuses production and requires the explicit confirmation value. Keep demo credentials out of production configuration.
 
 ## Verification
 
@@ -101,4 +137,4 @@ npm run test --workspace=server
 npm run build
 ```
 
-Authentication and all business modules begin in the next phases; see the roadmap.
+See [the functionality audit](docs/functionality-audit.md) and [roadmap](docs/roadmap.md) for the current implementation status.

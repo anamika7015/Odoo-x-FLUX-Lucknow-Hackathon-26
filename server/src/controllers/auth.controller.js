@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { config } from '../config/env.js';
-import { createStaff, login, logout, refreshSession, registerCustomer, requestPasswordReset, resetPassword } from '../services/auth.service.js';
+import { createStaff, login, loginDemo, logout, refreshSession, registerCustomer, requestPasswordReset, resetPassword } from '../services/auth.service.js';
 
 const accessCookie = { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', maxAge: 15 * 60 * 1000, path: '/' };
 const refreshCookie = { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000, path: '/api/v1/auth' };
@@ -22,6 +22,14 @@ export async function register(request, response) {
 }
 export async function loginUser(request, response) {
   const session = await login(request.body);
+  setSessionCookies(response, session);
+  response.status(200).json({ success: true, data: { user: session.user }, requestId: request.id });
+}
+export function demoConfig(request, response) {
+  response.json({ success: true, data: { roles: { ADMIN: Boolean(config.demo.admin), CUSTOMER: Boolean(config.demo.customer) } }, requestId: request.id });
+}
+export async function demoLoginUser(request, response) {
+  const session = await loginDemo(request.body.role);
   setSessionCookies(response, session);
   response.status(200).json({ success: true, data: { user: session.user }, requestId: request.id });
 }
@@ -53,6 +61,6 @@ export function me(request, response) {
   response.status(200).json({ success: true, data: { user: { id: request.user.id, fullName: request.user.fullName, email: request.user.email, role: request.user.role, status: request.user.status } }, requestId: request.id });
 }
 export async function createStaffUser(request, response) {
-  const user = await createStaff(request.body);
+  const user = await createStaff(request.body, request.user._id);
   response.status(201).json({ success: true, data: { user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role, status: user.status } }, requestId: request.id });
 }

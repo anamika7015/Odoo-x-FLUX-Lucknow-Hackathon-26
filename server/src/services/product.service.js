@@ -1,6 +1,7 @@
 import { Product } from '../models/product.model.js';
 import { ProductVariant } from '../models/product-variant.model.js';
 import { AppError } from '../utils/app-error.js';
+import { trustedFilter } from '../utils/trusted-filter.js';
 
 const normalize = (value) => value.trim().toLowerCase();
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -22,7 +23,8 @@ export async function listProducts({ page, limit, search, status, productType })
   if (status) filter.status = status;
   if (productType) filter.productType = productType;
   if (search) filter.$or = [{ name: { $regex: escapeRegex(search), $options: 'i' } }, { productType: { $regex: escapeRegex(search), $options: 'i' } }];
-  const [items, total] = await Promise.all([Product.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Product.countDocuments(filter)]);
+  const safeFilter = trustedFilter(filter);
+  const [items, total] = await Promise.all([Product.find(safeFilter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Product.countDocuments(safeFilter)]);
   return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 }
 export async function getProduct(productId) {

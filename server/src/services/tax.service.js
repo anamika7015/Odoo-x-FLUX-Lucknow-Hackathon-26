@@ -3,13 +3,14 @@ import { Product } from '../models/product.model.js';
 import { Tax } from '../models/tax.model.js';
 import { AuditLog } from '../models/audit-log.model.js';
 import { AppError } from '../utils/app-error.js';
+import { trustedFilter } from '../utils/trusted-filter.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 async function validateProducts(productIds) {
   const ids = [...new Set(productIds)];
   if (!ids.length) return;
-  const count = await Product.countDocuments({ _id: { $in: ids } });
+  const count = await Product.countDocuments(trustedFilter({ _id: { $in: ids } }));
   if (count !== ids.length) throw new AppError('One or more tax products were not found.', { statusCode: 422, code: 'PRODUCT_NOT_FOUND' });
 }
 
@@ -30,7 +31,8 @@ export async function createTax(input, actorId) {
 export async function listTaxes({ page, limit, status, search }) {
   const filter = { ...(status ? { status } : {}) };
   if (search) filter.name = { $regex: escapeRegex(search), $options: 'i' };
-  const [items, total] = await Promise.all([Tax.find(filter).populate('appliesTo', 'name').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Tax.countDocuments(filter)]);
+  const safeFilter = trustedFilter(filter);
+  const [items, total] = await Promise.all([Tax.find(safeFilter).populate('appliesTo', 'name').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Tax.countDocuments(safeFilter)]);
   return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 }
 

@@ -9,6 +9,15 @@ const taxSnapshotSchema = new mongoose.Schema({
   amount: { type: Number, required: true, min: 0 },
 }, { _id: false });
 
+const discountSnapshotSchema = new mongoose.Schema({
+  discount: { type: mongoose.Schema.Types.ObjectId, ref: 'Discount' },
+  name: { type: String, required: true },
+  code: { type: String, required: true },
+  type: { type: String, enum: ['FIXED', 'PERCENTAGE'] },
+  value: { type: Number, min: 0 },
+  amount: { type: Number, required: true, min: 0 },
+}, { _id: false });
+
 const invoiceLineSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
   productName: { type: String, required: true },
@@ -19,6 +28,9 @@ const invoiceLineSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, min: 1 },
   unitPrice: { type: Number, required: true, min: 0 },
   subtotal: { type: Number, required: true, min: 0 },
+  taxableSubtotal: { type: Number, required: true, min: 0 },
+  discounts: { type: [discountSnapshotSchema], default: [] },
+  discountTotal: { type: Number, required: true, min: 0, default: 0 },
   taxes: { type: [taxSnapshotSchema], default: [] },
   taxTotal: { type: Number, required: true, min: 0 },
   total: { type: Number, required: true, min: 0 },
@@ -35,6 +47,8 @@ const invoiceSchema = new mongoose.Schema({
   currency: { type: String, required: true, minlength: 3, maxlength: 3 },
   lines: { type: [invoiceLineSchema], required: true, validate: (lines) => lines.length > 0 },
   subtotal: { type: Number, required: true, min: 0 },
+  discounts: { type: [discountSnapshotSchema], default: [] },
+  discountTotal: { type: Number, required: true, min: 0, default: 0 },
   taxTotal: { type: Number, required: true, min: 0 },
   total: { type: Number, required: true, min: 0 },
   amountPaid: { type: Number, required: true, min: 0, default: 0 },
@@ -48,4 +62,5 @@ const invoiceSchema = new mongoose.Schema({
 invoiceSchema.index({ subscription: 1, periodStart: 1, periodEnd: 1 }, { unique: true });
 invoiceSchema.index({ customer: 1, createdAt: -1 });
 invoiceSchema.index({ status: 1, dueDate: 1 });
+invoiceSchema.index({ status: 1, confirmedAt: 1 });
 export const Invoice = mongoose.model('Invoice', invoiceSchema);

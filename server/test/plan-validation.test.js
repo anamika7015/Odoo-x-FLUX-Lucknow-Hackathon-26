@@ -12,6 +12,8 @@ describe('subscription plan rules', () => {
   it('requires positive quantities and valid plan availability windows', () => {
     const base = { name: 'Growth', product: 'a'.repeat(24), billingPrice: 199900, billingFrequency: 'MONTHLY', minimumQuantity: 1 };
     expect(createPlanSchema.safeParse(base).success).toBe(true);
+    expect(createPlanSchema.parse({ ...base, availabilityStartDate: null }).availabilityStartDate).toBeNull();
+    expect(createPlanSchema.parse({ ...base, availabilityEndDate: null }).availabilityEndDate).toBeNull();
     expect(createPlanSchema.safeParse({ ...base, minimumQuantity: 0 }).success).toBe(false);
     expect(createPlanSchema.safeParse({ ...base, availabilityStartDate: '2026-02-02', availabilityEndDate: '2026-02-01' }).success).toBe(false);
   });

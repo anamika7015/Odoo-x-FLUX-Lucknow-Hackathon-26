@@ -8,11 +8,13 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: Object.values(roles), default: roles.CUSTOMER, index: true },
   status: { type: String, enum: ['ACTIVE', 'SUSPENDED'], default: 'ACTIVE', index: true },
+  demoAccount: { type: Boolean, default: false, index: true },
   refreshTokenHash: { type: String, select: false },
   passwordResetTokenHash: { type: String, select: false },
   passwordResetExpiresAt: { type: Date, select: false },
   passwordChangedAt: { type: Date, select: false },
   lastLoginAt: { type: Date },
+  adminGuardVersion: { type: Number, default: 0, select: false },
 }, { timestamps: true, versionKey: false });
 
 userSchema.set('toJSON', {
