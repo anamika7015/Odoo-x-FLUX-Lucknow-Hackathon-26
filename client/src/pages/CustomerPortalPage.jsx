@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card.
 import { EmptyState } from '../components/EmptyState.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { PageTransition } from '../components/PageTransition.jsx';
-import { Modal } from './ProductsPage.jsx';
+import { Modal, FormField, FormInput, FormTextarea, ModalFooter } from '../components/ui/Modal.jsx';
 
 const money = (amount, currency = 'INR') => new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format((amount || 0) / 100);
 const date = (value) => value ? new Date(value).toLocaleDateString('en-IN') : '—';
@@ -575,22 +575,22 @@ export function CustomerPortalPage() {
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-3 p-5">
-        <Icon className="h-5 w-5 text-app-accent" />
-        <div>
-          <p className="text-sm text-app-muted">{label}</p>
-          <p className="text-xl font-semibold text-app-text">{value}</p>
+    <div className="rounded-2xl border border-app-border bg-app-surface p-5 shadow-sm transition-all hover:border-brand-teal/40">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-app-text-muted">{label}</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-teal/10 text-brand-teal">
+          <Icon size={16} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <p className="mt-3 text-2xl font-bold tracking-tight text-app-text tabular-nums">{value}</p>
+    </div>
   );
 }
 
 function ProfileField({ label, value }) {
   return (
-    <div>
-      <p className="text-xs uppercase tracking-wide text-app-muted">{label}</p>
+    <div className="rounded-xl border border-app-border/40 bg-app-secondary/20 p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-app-text-muted">{label}</p>
       <p className="mt-1 text-sm font-medium text-app-text">{value}</p>
     </div>
   );
@@ -604,30 +604,42 @@ function ProfileForm({ customer, busy, close, submit }) {
   });
   const update = (e) => setForm((curr) => ({ ...curr, [e.target.name]: e.target.value }));
   return (
-    <Modal title="Edit billing profile" close={close}>
+    <Modal
+      title="Edit Billing Profile"
+      description="Update your corporate details and default billing address for recurring invoices."
+      size="md"
+      close={close}
+    >
       <form
-        className="form-grid"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           submit(form);
         }}
       >
-        <label className="field">
-          <span>Phone</span>
-          <input name="phone" value={form.phone} onChange={update} placeholder="+91 ..." />
-        </label>
-        <label className="field">
-          <span>Company Name</span>
-          <input name="companyName" value={form.companyName} onChange={update} placeholder="Acme Inc." />
-        </label>
-        <label className="field full">
-          <span>Billing Address</span>
-          <textarea name="billingAddress" value={form.billingAddress} onChange={update} rows={3} placeholder="Street, City, State, Postal Code" />
-        </label>
-        <div className="full flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={close}>Cancel</Button>
-          <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save profile'}</Button>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Phone Number">
+            <FormInput name="phone" value={form.phone} onChange={update} placeholder="+91 98765 43210" />
+          </FormField>
+          <FormField label="Company Name">
+            <FormInput name="companyName" value={form.companyName} onChange={update} placeholder="Acme Technologies Ltd." />
+          </FormField>
         </div>
+        <FormField label="Billing Address">
+          <FormTextarea
+            name="billingAddress"
+            value={form.billingAddress}
+            onChange={update}
+            rows={3}
+            placeholder="Level 4, Executive Tower, Cyber Hub, Gurugram, Haryana"
+          />
+        </FormField>
+        <ModalFooter
+          onCancel={close}
+          cancelLabel="Cancel"
+          submitLabel="Save Changes"
+          busy={busy}
+        />
       </form>
     </Modal>
   );
@@ -635,51 +647,67 @@ function ProfileForm({ customer, busy, close, submit }) {
 
 function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
   const isOverdue = invoice.status === 'CONFIRMED' && invoice.outstanding > 0 && new Date(invoice.dueDate) < new Date();
+  const statusBadge = isOverdue ? 'OVERDUE' : invoice.status;
+
   return (
-    <Modal title={`Invoice Details · ${invoice.invoiceNumber}`} close={close}>
-      <div className="space-y-4 text-sm text-app-text">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-app-border bg-app-secondary/30 p-3">
+    <Modal
+      title={`Invoice · ${invoice.invoiceNumber}`}
+      description="Commercial tax invoice breakdown and payment details."
+      badge={statusBadge}
+      size="lg"
+      close={close}
+    >
+      <div className="space-y-5 text-sm text-app-text">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
           <div>
-            <p className="text-xs text-app-muted">Invoice Status</p>
-            <p className="font-semibold">{isOverdue ? 'OVERDUE' : invoice.status}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="font-bold text-app-text mt-0.5">{statusBadge}</p>
           </div>
           <div>
-            <p className="text-xs text-app-muted">Issued Date</p>
-            <p className="font-semibold">{date(invoice.createdAt)}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Issued Date</p>
+            <p className="font-semibold text-app-text mt-0.5">{date(invoice.createdAt)}</p>
           </div>
           <div>
-            <p className="text-xs text-app-muted">Due Date</p>
-            <p className="font-semibold">{date(invoice.dueDate)}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Due Date</p>
+            <p className="font-semibold text-app-text mt-0.5">{date(invoice.dueDate)}</p>
           </div>
           <div>
-            <p className="text-xs text-app-muted">Billing Period</p>
-            <p className="font-semibold">{date(invoice.periodStart)} – {date(invoice.periodEnd)}</p>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Period</p>
+            <p className="font-semibold text-app-text mt-0.5">{date(invoice.periodStart)} – {date(invoice.periodEnd)}</p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-semibold uppercase text-app-muted">Line Items</h4>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-app-border">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Itemized Products & Subscriptions</h4>
+          <div className="overflow-x-auto rounded-xl border border-app-border">
             <table className="w-full text-left text-xs">
-              <thead className="bg-app-secondary/50 uppercase text-app-muted">
+              <thead className="bg-app-secondary/60 text-app-text-muted font-semibold uppercase border-b border-app-border">
                 <tr>
-                  <th className="p-2.5">Item / Plan</th>
-                  <th className="p-2.5">Qty</th>
-                  <th className="p-2.5">Unit Price</th>
-                  <th className="p-2.5">Discounts</th>
-                  <th className="p-2.5">Taxes</th>
-                  <th className="p-2.5 text-right">Line Total</th>
+                  <th className="p-3">Item / Plan</th>
+                  <th className="p-3 text-center">Qty</th>
+                  <th className="p-3 text-right">Unit Price</th>
+                  <th className="p-3 text-right">Discounts</th>
+                  <th className="p-3 text-right">Taxes</th>
+                  <th className="p-3 text-right">Line Total</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-app-border">
                 {invoice.lines.map((line, idx) => (
-                  <tr key={idx} className="border-t border-app-border">
-                    <td className="p-2.5 font-medium">{line.productName} <span className="text-app-muted">({line.planName})</span></td>
-                    <td className="p-2.5">{line.quantity}</td>
-                    <td className="p-2.5">{money(line.unitPrice, invoice.currency)}</td>
-                    <td className="p-2.5">{line.discountTotal ? `−${money(line.discountTotal, invoice.currency)}` : '—'}</td>
-                    <td className="p-2.5">{line.taxTotal ? `+${money(line.taxTotal, invoice.currency)}` : '—'}</td>
-                    <td className="p-2.5 text-right font-semibold">{money(line.total, invoice.currency)}</td>
+                  <tr key={idx} className="hover:bg-app-secondary/20 transition-colors">
+                    <td className="p-3 font-medium text-app-text">
+                      {line.productName} <span className="text-app-text-muted font-normal">({line.planName})</span>
+                    </td>
+                    <td className="p-3 text-center tabular-nums">{line.quantity}</td>
+                    <td className="p-3 text-right tabular-nums">{money(line.unitPrice, invoice.currency)}</td>
+                    <td className="p-3 text-right tabular-nums text-emerald-500">
+                      {line.discountTotal ? `−${money(line.discountTotal, invoice.currency)}` : '—'}
+                    </td>
+                    <td className="p-3 text-right tabular-nums text-app-text-muted">
+                      {line.taxTotal ? `+${money(line.taxTotal, invoice.currency)}` : '—'}
+                    </td>
+                    <td className="p-3 text-right font-bold text-app-text tabular-nums">
+                      {money(line.total, invoice.currency)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -687,44 +715,54 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
           </div>
         </div>
 
-        <div className="flex justify-end border-t border-app-border pt-3">
-          <div className="w-64 space-y-1.5 text-xs">
-            <div className="flex justify-between">
-              <span className="text-app-muted">Subtotal:</span>
-              <span>{money(invoice.subtotal, invoice.currency)}</span>
+        <div className="flex justify-end pt-2">
+          <div className="w-full sm:w-72 space-y-2 rounded-xl border border-app-border bg-app-secondary/20 p-4 text-xs">
+            <div className="flex justify-between text-app-text-muted">
+              <span>Subtotal:</span>
+              <span className="font-semibold text-app-text tabular-nums">{money(invoice.subtotal, invoice.currency)}</span>
             </div>
             {Boolean(invoice.discountTotal) && (
-              <div className="flex justify-between text-emerald-600">
+              <div className="flex justify-between text-emerald-500 font-medium">
                 <span>Discounts:</span>
-                <span>−{money(invoice.discountTotal, invoice.currency)}</span>
+                <span className="tabular-nums">−{money(invoice.discountTotal, invoice.currency)}</span>
               </div>
             )}
             {Boolean(invoice.taxTotal) && (
-              <div className="flex justify-between text-app-muted">
+              <div className="flex justify-between text-app-text-muted">
                 <span>Taxes:</span>
-                <span>+{money(invoice.taxTotal, invoice.currency)}</span>
+                <span className="tabular-nums">+{money(invoice.taxTotal, invoice.currency)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-app-border pt-1 font-semibold text-sm">
-              <span>Total:</span>
-              <span>{money(invoice.total, invoice.currency)}</span>
+            <div className="flex justify-between border-t border-app-border pt-2 font-bold text-sm text-app-text">
+              <span>Total Invoiced:</span>
+              <span className="tabular-nums">{money(invoice.total, invoice.currency)}</span>
             </div>
-            <div className="flex justify-between text-app-muted">
+            <div className="flex justify-between text-app-text-muted">
               <span>Amount Paid:</span>
-              <span>{money(invoice.amountPaid, invoice.currency)}</span>
+              <span className="font-semibold text-emerald-500 tabular-nums">{money(invoice.amountPaid, invoice.currency)}</span>
             </div>
-            <div className="flex justify-between border-t border-app-border pt-1 font-semibold text-sm text-app-accent">
+            <div className="flex justify-between border-t border-app-border pt-2 font-bold text-sm text-brand-gold">
               <span>Outstanding Due:</span>
-              <span>{money(invoice.outstanding, invoice.currency)}</span>
+              <span className="tabular-nums">{money(invoice.outstanding, invoice.currency)}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between gap-2 border-t border-app-border pt-4">
-          <Button variant="outline" onClick={onDownloadPdf}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-app-border pt-4">
+          <button
+            type="button"
+            onClick={onDownloadPdf}
+            className="inline-flex items-center gap-2 rounded-lg border border-app-border bg-app-surface px-4 py-2 text-xs font-semibold text-app-text shadow-sm hover:border-brand-teal hover:text-brand-teal transition-all"
+          >
             <FiDownload size={14} /> Download Official PDF
-          </Button>
-          <Button variant="outline" onClick={close}>Close</Button>
+          </button>
+          <button
+            type="button"
+            onClick={close}
+            className="rounded-lg border border-app-border bg-transparent px-4 py-2 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     </Modal>
@@ -734,51 +772,101 @@ function InvoiceDetailsModal({ invoice, close, onDownloadPdf }) {
 function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
   const total = subscription.lines.reduce((sum, line) => sum + line.lineTotal, 0);
   return (
-    <Modal title={`Subscription · ${subscription.subscriptionNumber}`} close={close}>
-      <div className="space-y-4 text-sm text-app-text">
-        <div className="grid grid-cols-2 gap-3 rounded-lg border border-app-border bg-app-secondary/30 p-3 text-xs">
-          <div><p className="text-app-muted">Status</p><Badge variant={subscription.status === 'ACTIVE' ? 'success' : 'muted'}>{subscription.status}</Badge></div>
-          <div><p className="text-app-muted">Frequency</p><p className="font-semibold">{subscription.lines[0]?.billingFrequency}</p></div>
-          <div><p className="text-app-muted">Start Date</p><p className="font-semibold">{date(subscription.startDate)}</p></div>
-          <div><p className="text-app-muted">Next Billing</p><p className="font-semibold">{date(subscription.nextBillingDate)}</p></div>
-          <div><p className="text-app-muted">Payment Terms</p><p className="font-semibold">{subscription.paymentTerms || 'Standard'}</p></div>
-          <div><p className="text-app-muted">Recurring Amount</p><p className="font-semibold text-app-accent">{money(total, subscription.currency)}</p></div>
+    <Modal
+      title={`Subscription · ${subscription.subscriptionNumber}`}
+      description="Recurring billing agreement parameters and subscription lifecycle."
+      badge={subscription.status}
+      size="lg"
+      close={close}
+    >
+      <div className="space-y-5 text-sm text-app-text">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="font-bold text-app-text mt-0.5">{subscription.status}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Billing Frequency</p>
+            <p className="font-semibold text-app-text mt-0.5">{subscription.lines[0]?.billingFrequency || 'Monthly'}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Start Date</p>
+            <p className="font-semibold text-app-text mt-0.5">{date(subscription.startDate)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Next Billing</p>
+            <p className="font-semibold text-app-text mt-0.5">{date(subscription.nextBillingDate)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Payment Terms</p>
+            <p className="font-semibold text-app-text mt-0.5">{subscription.paymentTerms || 'Standard'}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Recurring Rate</p>
+            <p className="font-bold text-brand-teal mt-0.5 tabular-nums">{money(total, subscription.currency)}</p>
+          </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-semibold uppercase text-app-muted">Subscribed Plans</h4>
-          <div className="mt-2 space-y-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Committed Plans & Products</h4>
+          <div className="space-y-2">
             {subscription.lines.map((line, idx) => (
-              <div key={idx} className="flex justify-between items-center rounded-lg border border-app-border p-2.5 text-xs">
+              <div
+                key={idx}
+                className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 text-xs"
+              >
                 <div>
-                  <strong>{line.planName}</strong>
-                  <p className="text-app-muted">{line.productName} · Qty: {line.quantity}</p>
+                  <strong className="text-app-text font-bold">{line.planName}</strong>
+                  <p className="text-app-text-muted text-[11px]">{line.productName} · Qty: {line.quantity}</p>
                 </div>
-                <strong>{money(line.lineTotal, subscription.currency)}</strong>
+                <strong className="font-bold text-app-text tabular-nums">{money(line.lineTotal, subscription.currency)}</strong>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-app-border pt-4">
-          <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-app-border pt-4">
+          <div className="flex flex-wrap gap-2">
             {subscription.status === 'ACTIVE' && subscription.allowPause && (
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => onAction('pause')}>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onAction('pause')}
+                className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-medium text-app-text hover:border-amber-500 hover:text-amber-500 transition-colors disabled:opacity-50"
+              >
                 Request Pause
-              </Button>
+              </button>
             )}
             {subscription.status === 'PAUSED' && (
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => onAction('resume')}>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onAction('resume')}
+                className="rounded-lg border border-brand-teal bg-brand-teal/10 px-3 py-1.5 text-xs font-semibold text-brand-teal hover:bg-brand-teal/20 transition-colors disabled:opacity-50"
+              >
                 Resume Subscription
-              </Button>
+              </button>
             )}
             {['ACTIVE', 'PAUSED'].includes(subscription.status) && subscription.allowEarlyClosure && (
-              <Button size="sm" variant="destructive" disabled={busy} onClick={() => { if (window.confirm('Close this subscription early?')) onAction('close'); }}>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm('Close this subscription early?')) onAction('close');
+                }}
+                className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+              >
                 Close Early
-              </Button>
+              </button>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={close}>Close</Button>
+          <button
+            type="button"
+            onClick={close}
+            className="rounded-lg border border-app-border bg-transparent px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     </Modal>
@@ -788,46 +876,97 @@ function SubscriptionDetailsModal({ subscription, close, onAction, busy }) {
 function QuotationDetailsModal({ quotation, close, onAccept, onReject, onDownloadPdf, busy }) {
   const isPending = quotation.status === 'QUOTATION' && new Date(quotation.validUntil) >= new Date();
   return (
-    <Modal title={`Quotation · ${quotation.quotationNumber}`} close={close}>
-      <div className="space-y-4 text-sm text-app-text">
-        <div className="grid grid-cols-2 gap-3 rounded-lg border border-app-border bg-app-secondary/30 p-3 text-xs">
-          <div><p className="text-app-muted">Status</p><Badge variant={quotation.status === 'QUOTATION' ? 'success' : 'muted'}>{quotation.status}</Badge></div>
-          <div><p className="text-app-muted">Validity</p><p className="font-semibold">Valid until {date(quotation.validUntil)}</p></div>
-          <div><p className="text-app-muted">Payment Terms</p><p className="font-semibold">{quotation.paymentTerms || 'Standard terms'}</p></div>
-          <div><p className="text-app-muted">Total Estimate</p><p className="font-semibold text-app-accent">{money(quotation.total, quotation.currency)}</p></div>
+    <Modal
+      title={`Quotation · ${quotation.quotationNumber}`}
+      description="Subscription proposal estimate and commercial agreement terms."
+      badge={quotation.status}
+      size="lg"
+      close={close}
+    >
+      <div className="space-y-5 text-sm text-app-text">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-app-border bg-app-secondary/30 p-3.5 text-xs">
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Status</p>
+            <p className="font-bold text-app-text mt-0.5">{quotation.status}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Validity</p>
+            <p className="font-semibold text-app-text mt-0.5">Valid until {date(quotation.validUntil)}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Payment Terms</p>
+            <p className="font-semibold text-app-text mt-0.5">{quotation.paymentTerms || 'Standard terms'}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-app-text-muted uppercase tracking-wider font-semibold">Total Estimate</p>
+            <p className="font-bold text-brand-teal mt-0.5 tabular-nums">{money(quotation.total, quotation.currency)}</p>
+          </div>
         </div>
 
         <div>
-          <h4 className="text-xs font-semibold uppercase text-app-muted">Quoted Lines</h4>
-          <div className="mt-2 space-y-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-app-text-muted mb-2">Quoted Offerings</h4>
+          <div className="space-y-2">
             {quotation.lines.map((line, idx) => (
-              <div key={idx} className="flex justify-between items-center rounded-lg border border-app-border p-2.5 text-xs">
+              <div
+                key={idx}
+                className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 text-xs"
+              >
                 <div>
-                  <strong>{line.planName}</strong>
-                  <p className="text-app-muted">{line.productName} · {line.quantity} unit(s) @ {money(line.unitPrice, quotation.currency)}</p>
+                  <strong className="text-app-text font-bold">{line.planName}</strong>
+                  <p className="text-app-text-muted text-[11px]">
+                    {line.productName} · {line.quantity} unit(s) @ {money(line.unitPrice, quotation.currency)}
+                  </p>
                 </div>
-                <strong>{money(line.total || line.lineTotal, quotation.currency)}</strong>
+                <strong className="font-bold text-app-text tabular-nums">
+                  {money(line.total || line.lineTotal, quotation.currency)}
+                </strong>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-app-border pt-4">
-          <Button size="sm" variant="outline" onClick={onDownloadPdf}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-app-border pt-4">
+          <button
+            type="button"
+            onClick={onDownloadPdf}
+            className="inline-flex items-center gap-2 rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-xs font-semibold text-app-text hover:border-brand-teal hover:text-brand-teal transition-all"
+          >
             <FiDownload size={14} /> Download PDF
-          </Button>
-          <div className="flex gap-2">
+          </button>
+          <div className="flex items-center gap-2">
             {isPending && (
               <>
-                <Button size="sm" disabled={busy} onClick={onAccept}>Accept Offer</Button>
-                <Button size="sm" variant="outline" disabled={busy} onClick={onReject}>Reject Offer</Button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={onAccept}
+                  className="rounded-lg bg-brand-teal px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-teal-hover transition-colors disabled:opacity-50"
+                >
+                  Accept Offer
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={onReject}
+                  className="rounded-lg border border-app-border bg-transparent px-3 py-1.5 text-xs font-medium text-app-text hover:border-rose-500 hover:text-rose-500 transition-colors disabled:opacity-50"
+                >
+                  Reject
+                </button>
               </>
             )}
-            <Button size="sm" variant="outline" onClick={close}>Close</Button>
+            <button
+              type="button"
+              onClick={close}
+              className="rounded-lg border border-app-border bg-transparent px-4 py-1.5 text-xs font-semibold text-app-text hover:bg-app-secondary transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>
     </Modal>
+  );
+}
   );
 }
 
