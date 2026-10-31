@@ -1,1 +1,77 @@
-## Odoo X Flux Lucknow Hackathon
+# Brightloop Software — Subscription Management Platform
+
+Enterprise subscription billing SaaS built with React/Vite, Express, and MongoDB.
+
+## Delivery status
+
+Phase 1 delivered architecture, domain/API design, the delivery roadmap, monorepo workspace scaffold, and no-flash light/dark theme tokens.
+
+Phase 2 delivers the Express/MongoDB foundation: environment validation, connection lifecycle, security headers, CORS allowlisting, request IDs, API rate limits, JSON limits, structured errors, graceful shutdown, and health probes. Read [architecture](docs/architecture.md), [data model](docs/data-model.md), [API contract](docs/api-contract.md), [business rules](docs/business-rules.md), and [roadmap](docs/roadmap.md).
+
+Phase 3 delivers authentication: validated customer registration, HTTP-only JWT session cookies, CSRF tokens, session refresh/logout, password-reset tokens, role middleware, and administrator-only staff creation.
+
+Phase 4 delivers product catalog APIs: admin-managed products and variants, server-side dynamic variant pricing, pagination/search/filtering, and immutable-price-ready integer paise amounts.
+
+Phase 5 delivers subscription-plan APIs plus the integrated frontend for the completed modules: registration/sign-in, protected workspace, light/dark/system theme control, products, and billing plans. The UI communicates only with the implemented backend endpoints; future modules are intentionally not shown as completed features.
+
+## Prerequisites
+
+- Node.js 20.11+ and npm 10+
+- MongoDB replica set / Atlas (needed in Phase 2)
+- Redis (needed in Phase 10)
+
+## Setup
+
+```bash
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Create the initial administrator once MongoDB is running (do not expose this command or its password in deployment logs):
+
+```bash
+npm run bootstrap:admin --workspace=server -- "Brightloop Admin" admin@example.com "Strong!Password1"
+```
+
+## Health endpoints
+
+- `GET /api/v1/health/live` — process liveness; suitable for the platform liveness probe.
+- `GET /api/v1/health/ready` — returns `200` only when MongoDB is connected; suitable for the readiness probe.
+
+## Authentication endpoints
+
+- `GET /api/v1/auth/csrf` — issue CSRF cookie/token before cookie-authenticated mutations.
+- `POST /api/v1/auth/register`, `/login`, `/refresh`, `/logout`
+- `POST /api/v1/auth/forgot-password`, `/reset-password`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/staff` — ADMIN only; requires authentication and CSRF token.
+
+## Product endpoints
+
+All product endpoints require authentication. `POST` and `PATCH` endpoints additionally require an ADMIN session and matching CSRF token.
+
+- `GET/POST /api/v1/products`
+- `GET/PATCH /api/v1/products/:productId`
+- `GET/POST /api/v1/products/:productId/variants`
+- `PATCH /api/v1/products/:productId/variants/:variantId`
+
+## Plan endpoints
+
+All plan endpoints require authentication. Create and update require an ADMIN session and matching CSRF token.
+
+- `GET/POST /api/v1/plans`
+- `GET/PATCH /api/v1/plans/:planId`
+
+## Frontend API configuration
+
+The client defaults to `http://localhost:5000/api/v1`. To use another API base URL, set `VITE_API_URL` in `client/.env.local`.
+
+## Verification
+
+```bash
+npm run test --workspace=server
+npm run build
+```
+
+Authentication and all business modules begin in the next phases; see the roadmap.

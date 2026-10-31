@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import * as controller from '../controllers/plan.controller.js';
+import { requireAuth, requireRoles } from '../middleware/auth.middleware.js';
+import { requireCsrf } from '../middleware/csrf.middleware.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.middleware.js';
+import { roles } from '../models/user.model.js';
+import { asyncHandler } from '../utils/async-handler.js';
+import { createPlanSchema, listPlansQuerySchema, planParamsSchema, updatePlanSchema } from '../validators/plan.validator.js';
+const router = Router();
+router.use(requireAuth);
+router.get('/', validateQuery(listPlansQuerySchema), asyncHandler(controller.listPlans));
+router.post('/', requireRoles(roles.ADMIN), requireCsrf, validateBody(createPlanSchema), asyncHandler(controller.createPlan));
+router.get('/:planId', validateParams(planParamsSchema), asyncHandler(controller.getPlan));
+router.patch('/:planId', requireRoles(roles.ADMIN), requireCsrf, validateParams(planParamsSchema), validateBody(updatePlanSchema), asyncHandler(controller.updatePlan));
+export default router;

@@ -1,0 +1,2 @@
+/** @type {import('tailwindcss').Config} */
+export default { content: ['./index.html', './src/**/*.{js,jsx}'], theme: { extend: { colors: { app: { background: 'var(--color-background)', surface: 'var(--color-surface)', secondary: 'var(--color-surface-secondary)', text: 'var(--color-text)', muted: 'var(--color-text-muted)', accent: 'var(--color-accent)', border: 'var(--color-border)' } } } }, plugins: [] };
